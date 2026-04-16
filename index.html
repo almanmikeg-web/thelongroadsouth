@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Long Road South</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --ink:#3E2A12;--ink2:#503818;--ink3:#6B4E22;
+      --sand:#F5F0E8;--sand2:#E0D8C8;--sand3:#9A8E78;
+      --accent:#C84B2F;--gold:#B8860B;--gold2:#D4A017;
+      --blue:#4A90C4;--teal:#7EB8A0;
+      --pw:380px;--hh:64px;
+    }
+    html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:#ddd5c4;color:var(--sand)}
+
+    /* INTRO */
+    .intro{position:fixed;inset:0;z-index:300;background:rgba(62,42,18,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:opacity 0.9s ease}
+    .intro.gone{opacity:0;pointer-events:none}
+    .i-title{font-family:'Playfair Display',serif;font-size:38px;font-weight:700;color:var(--sand);animation:up 0.7s ease 0.2s both}
+    .i-line{width:0;height:1px;background:var(--accent);margin:10px 0;animation:grow 0.6s ease 0.7s both}
+    .i-sub{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--sand3);animation:up 0.7s ease 0.9s both}
+    .i-km{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold2);margin-top:6px;animation:up 0.7s ease 1.1s both}
+    .i-status{font-family:'DM Mono',monospace;font-size:10px;color:var(--sand3);margin-top:10px;letter-spacing:0.08em;min-height:16px}
+    @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes grow{from{width:0;opacity:0}to{width:44px;opacity:1}}
+
+    /* HEADER */
+    header{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--hh);display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(62,42,18,0.95);backdrop-filter:blur(12px);border-bottom:0.5px solid rgba(240,235,224,0.08)}
+    .logo-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;line-height:1}
+    .logo-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--sand3);margin-top:2px}
+    nav{display:flex;gap:6px}
+    .nav-btn{padding:6px 14px;border-radius:20px;border:0.5px solid rgba(240,235,224,0.15);background:transparent;color:var(--sand3);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s}
+    .nav-btn:hover{color:var(--sand);border-color:rgba(240,235,224,0.3)}
+    .nav-btn.active{background:var(--accent);color:#fff;border-color:transparent}
+    .hstats{display:flex;gap:24px}
+    .hstat-val{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--gold2);line-height:1;text-align:right}
+    .hstat-label{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--sand3);margin-top:2px;text-align:right}
+
+    /* MAP */
+    #map{position:fixed;top:var(--hh);left:0;width:calc(100% - var(--pw));height:calc(100% - var(--hh))}
+    .leaflet-container{background:#ddd5c4!important}
+    .leaflet-control-attribution{display:none!important}
+
+    /* ROUTE LOADING */
+    .route-status{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(62,42,18,0.88);border:0.5px solid rgba(240,235,224,0.15);border-radius:20px;padding:7px 16px;font-family:'DM Mono',monospace;font-size:10px;color:var(--sand3);letter-spacing:0.08em;transition:opacity 0.5s;pointer-events:none}
+    .route-status.done{opacity:0}
+
+    /* LEGEND */
+    .legend{position:fixed;bottom:20px;left:20px;z-index:50;background:rgba(62,42,18,0.88);backdrop-filter:blur(8px);border:0.5px solid rgba(240,235,224,0.1);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:7px}
+    .leg-row{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--sand3)}
+    .leg-line{width:20px;height:2px;border-radius:1px;flex-shrink:0}
+    .leg-diamond{width:9px;height:9px;transform:rotate(45deg);background:var(--gold2);border:1.5px solid #fff;flex-shrink:0}
+    .leg-circle{width:9px;height:9px;border-radius:50%;flex-shrink:0;border:1.5px solid #fff}
+    .leg-small{width:7px;height:7px;border-radius:50%;flex-shrink:0;border:1px solid #fff}
+
+    /* PANEL TOGGLE */
+    .ptoggle{position:fixed;top:50%;right:var(--pw);transform:translateY(-50%);z-index:51;background:rgba(62,42,18,0.90);border:0.5px solid rgba(240,235,224,0.12);border-right:none;border-radius:6px 0 0 6px;padding:10px 7px;cursor:pointer;color:var(--sand3);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;writing-mode:vertical-rl;transition:all 0.3s}
+    .ptoggle:hover{color:var(--sand)}
+
+    /* PANEL */
+    .panel{position:fixed;top:var(--hh);right:0;width:var(--pw);height:calc(100% - var(--hh));background:rgba(62,42,18,0.96);backdrop-filter:blur(16px);border-left:0.5px solid rgba(240,235,224,0.08);display:flex;flex-direction:column;z-index:50;transition:transform 0.35s cubic-bezier(0.4,0,0.2,1)}
+    .panel.hidden{transform:translateX(100%)}
+    .psection{padding:18px 20px 0;flex-shrink:0}
+    .pscroll{flex:1;overflow-y:auto;padding:4px 20px 24px}
+    .pscroll::-webkit-scrollbar{width:3px}
+    .pscroll::-webkit-scrollbar-thumb{background:rgba(107,78,34,0.6);border-radius:2px}
+
+    /* POSITION CARD */
+    .pos-card{background:rgba(80,58,24,0.92);border:0.5px solid rgba(240,235,224,0.08);border-radius:10px;padding:16px;margin-bottom:14px}
+    .pos-eye{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:5px}
+    .pos-place{font-family:'Playfair Display',serif;font-size:21px;font-weight:700;color:var(--sand);line-height:1.15;margin-bottom:3px}
+    .pos-chapter{font-size:11px;color:var(--sand3);font-style:italic;margin-bottom:14px}
+    .prog-track{height:3px;background:rgba(255,255,255,0.07);border-radius:2px;margin-bottom:7px;position:relative}
+    .prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold2));border-radius:2px;position:relative}
+    .prog-dot{position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:9px;height:9px;border-radius:50%;background:var(--gold2);box-shadow:0 0 8px rgba(212,160,23,0.7)}
+    .prog-labels{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:9px;color:var(--sand3)}
+    .km-row{display:flex;gap:8px;margin-top:13px}
+    .km-stat{flex:1;background:rgba(255,255,255,0.05);border-radius:6px;padding:8px 10px}
+    .km-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--sand)}
+    .km-lbl{font-size:9px;letter-spacing:0.07em;text-transform:uppercase;color:var(--sand3);margin-top:2px}
+
+    /* LOC IMG */
+    .loc-img{border-radius:8px;overflow:hidden;margin-bottom:14px;height:148px;background:var(--ink2);position:relative}
+    .loc-img img{width:100%;height:100%;object-fit:cover;opacity:0.88}
+    .loc-cap{position:absolute;bottom:0;left:0;right:0;padding:7px 10px;background:linear-gradient(transparent,rgba(62,42,18,0.88));font-size:10px;color:var(--sand2);font-style:italic}
+
+    /* NEXT MILESTONE */
+    .ms-card{background:rgba(80,58,24,0.92);border:0.5px solid rgba(212,160,23,0.2);border-radius:8px;padding:11px 13px;margin-bottom:14px;display:flex;align-items:center;gap:11px}
+    .ms-icon{width:30px;height:30px;border-radius:50%;background:rgba(212,160,23,0.1);border:0.5px solid rgba(212,160,23,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .ms-lbl{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
+    .ms-name{font-size:13px;font-weight:500;color:var(--sand)}
+    .ms-km{font-family:'DM Mono',monospace;font-size:10px;color:var(--sand3);margin-top:1px}
+
+    .divider{height:0.5px;background:rgba(240,235,224,0.06);margin:14px 0}
+    .sec-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--sand3);margin-bottom:10px}
+
+    /* JOURNAL */
+    .entry{padding:14px 0;border-bottom:0.5px solid rgba(240,235,224,0.06)}
+    .entry:last-child{border-bottom:none}
+    .entry-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+    .entry-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--sand3)}
+    .entry-km{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--gold2)}
+    .entry-total{font-family:'DM Mono',monospace;font-size:10px;color:var(--sand3);margin-bottom:7px}
+    .entry-virt{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--sand2);margin-bottom:8px}
+    .entry-photo{width:100%;height:108px;border-radius:6px;object-fit:cover;opacity:0.85;display:block;margin-bottom:5px}
+    .entry-cap{font-size:10px;color:var(--sand3);font-style:italic;margin-bottom:5px}
+    .entry-note{font-size:12px;color:var(--sand3);line-height:1.55;border-left:1.5px solid rgba(240,235,224,0.1);padding-left:8px;margin-top:4px}
+
+    /* MARKERS */
+    .you-dot{width:16px;height:16px;border-radius:50%;background:#D4A017;border:2.5px solid #fff;box-shadow:0 0 0 4px rgba(212,160,23,0.3),0 0 14px rgba(212,160,23,0.5);animation:pulse 2.5s ease-in-out infinite}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(212,160,23,0.3),0 0 14px rgba(212,160,23,0.5)}50%{box-shadow:0 0 0 9px rgba(212,160,23,0.1),0 0 22px rgba(212,160,23,0.6)}}
+    .m-milestone{width:12px;height:12px;transform:rotate(45deg);background:#D4A017;border:2px solid #fff;cursor:pointer;transition:transform 0.15s;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
+    .m-milestone:hover{transform:rotate(45deg) scale(1.5)}
+    .m-milestone.ahead{background:#9A8E78;opacity:0.45}
+    .m-month{width:11px;height:11px;border-radius:50%;background:#D4A017;border:2px solid #fff;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,0.25)}
+    .m-week{width:8px;height:8px;border-radius:50%;background:#7EB8A0;border:1.5px solid #fff;cursor:pointer;opacity:0.85}
+    .m-ride{width:6px;height:6px;border-radius:50%;background:#C84B2F;border:1px solid rgba(255,255,255,0.7);cursor:pointer;opacity:0.7}
+
+    /* POPUPS */
+    .leaflet-popup-content-wrapper{background:rgba(62,42,18,0.96)!important;border:0.5px solid rgba(240,235,224,0.12)!important;border-radius:8px!important;color:var(--sand)!important;box-shadow:0 8px 32px rgba(0,0,0,0.5)!important;font-family:'DM Sans',sans-serif!important}
+    .leaflet-popup-tip{background:rgba(62,42,18,0.96)!important}
+    .leaflet-popup-close-button{color:var(--sand3)!important}
+    .leaflet-popup-content{margin:13px 15px!important;min-width:190px}
+    .p-eye{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+    .p-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--sand);margin-bottom:3px}
+    .p-km{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold2);margin-bottom:7px}
+    .p-img{width:100%;height:88px;object-fit:cover;border-radius:5px;margin-bottom:6px;opacity:0.88}
+    .p-desc{font-size:12px;color:var(--sand3);line-height:1.5}
+    .p-pass{font-size:10px;color:var(--accent);margin-top:5px;letter-spacing:0.05em}
+    .p-ahead{font-size:10px;color:var(--sand3);margin-top:5px}
+    .p-wlbl{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;color:#7EB8A0;margin-bottom:3px}
+    .p-mlbl{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;color:var(--gold2);margin-bottom:3px}
+  </style>
+</head>
+<body>
+
+<div class="intro" id="intro">
+  <div class="i-title">The Long Road South</div>
+  <div class="i-line"></div>
+  <div class="i-sub">11 Outer Forum Rd → Val de Vie · 11,850 km</div>
+  <div class="i-km">612 km ridden · Virtually near Paris</div>
+  <div class="i-status" id="intro-status">Plotting the route...</div>
+</div>
+
+<header>
+  <div>
+    <div class="logo-title">The Long Road South</div>
+    <div class="logo-sub">11 Outer Forum Rd, Liverpool → Val de Vie, Paarl</div>
+  </div>
+  <nav>
+    <button class="nav-btn active">Map</button>
+    <button class="nav-btn">Journal</button>
+    <button class="nav-btn">Stats</button>
+  </nav>
+  <div class="hstats">
+    <div><div class="hstat-val">612 km</div><div class="hstat-label">Total ridden</div></div>
+    <div><div class="hstat-val">5.2%</div><div class="hstat-label">Complete</div></div>
+    <div><div class="hstat-val">103</div><div class="hstat-label">Days on road</div></div>
+  </div>
+</header>
+
+<div id="map"></div>
+
+<div class="route-status" id="route-status">Fetching road geometry...</div>
+
+<div class="legend">
+  <div class="leg-row"><div class="leg-line" style="background:#C84B2F"></div>Ridden</div>
+  <div class="leg-row"><div class="leg-line" style="background:#4A90C4;opacity:0.7"></div>Ahead</div>
+  <div class="leg-row"><div class="leg-diamond"></div>Milestone</div>
+  <div class="leg-row"><div class="leg-circle" style="background:var(--gold2)"></div>Monthly</div>
+  <div class="leg-row"><div class="leg-circle" style="background:var(--teal)"></div>Weekly</div>
+  <div class="leg-row"><div class="leg-small" style="background:var(--accent)"></div>Ride</div>
+</div>
+
+<button class="ptoggle" id="ptoggle" onclick="togglePanel()">JOURNAL</button>
+
+<div class="panel" id="panel">
+  <div class="psection">
+    <div class="pos-card">
+      <div class="pos-eye">You are virtually here</div>
+      <div class="pos-place">Near Paris, France</div>
+      <div class="pos-chapter">Chapter II — The Spine of Europe</div>
+      <div class="prog-track">
+        <div class="prog-fill" style="width:5.2%"><div class="prog-dot"></div></div>
+      </div>
+      <div class="prog-labels"><span>Liverpool</span><span>5.2%</span><span>Val de Vie</span></div>
+      <div class="km-row">
+        <div class="km-stat"><div class="km-val">612</div><div class="km-lbl">km ridden</div></div>
+        <div class="km-stat"><div class="km-val">11,238</div><div class="km-lbl">km to go</div></div>
+        <div class="km-stat"><div class="km-val">2030</div><div class="km-lbl">est. finish</div></div>
+      </div>
+    </div>
+    <div class="loc-img">
+      <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=80" alt="Paris">
+      <div class="loc-cap">Paris, France — virtually passing through</div>
+    </div>
+    <div class="ms-card">
+      <div class="ms-icon">🌊</div>
+      <div>
+        <div class="ms-lbl">Next milestone</div>
+        <div class="ms-name">Passau — Three Rivers</div>
+        <div class="ms-km">378 km away</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="sec-lbl">Recent rides</div>
+  </div>
+  <div class="pscroll" id="journal"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// WAYPOINTS — the anchor points for routing
+// These are passed to OSRM in segments
+// ═══════════════════════════════════════
+const WAYPOINTS = [
+  {lat:53.448936,lng:-2.928957},  // 11 Outer Forum Road, Liverpool L11
+  {lat:53.1935,lng:-2.8928},  // Chester
+  {lat:51.5074,lng:-0.1278},  // London
+  {lat:51.1295,lng:1.3089},   // Dover
+  {lat:50.9513,lng:1.8587},   // Calais
+  {lat:48.8566,lng:2.3522},   // Paris
+  {lat:47.3220,lng:5.0415},   // Dijon
+  {lat:47.7516,lng:7.3359},   // Mulhouse
+  {lat:48.3974,lng:9.9919},   // Ulm
+  {lat:48.5734,lng:13.4508},  // Passau
+  {lat:48.2912,lng:14.2900},  // Linz
+  {lat:48.3600,lng:15.1000},  // Melk
+  {lat:48.4000,lng:15.6000},  // Krems/Wachau
+  {lat:48.2082,lng:16.3738},  // Vienna
+  {lat:47.8095,lng:17.9858},  // Győr
+  {lat:47.4979,lng:19.0402},  // Budapest
+  {lat:45.2671,lng:19.8335},  // Novi Sad
+  {lat:44.8176,lng:20.4569},  // Belgrade
+  {lat:43.3209,lng:21.8954},  // Niš
+  {lat:42.6977,lng:23.3219},  // Sofia
+  {lat:41.6818,lng:26.5597},  // Edirne
+  {lat:41.0082,lng:28.9784},  // Istanbul
+  // Turkey
+  {lat:40.7667,lng:29.9167},  // Izmit
+  {lat:40.6500,lng:30.4000},  // Adapazarı
+  {lat:40.1553,lng:32.6500},  // Ankara area
+  {lat:38.7312,lng:35.4787},  // Kayseri
+  {lat:37.0662,lng:37.3833},  // Gaziantep
+  {lat:36.2021,lng:36.1600},  // Antakya
+  // Jordan
+  {lat:32.5568,lng:35.8469},  // Irbid
+  {lat:31.9454,lng:35.9284},  // Amman
+  {lat:29.5267,lng:35.0060},  // Aqaba
+  // Egypt
+  {lat:29.9600,lng:32.5500},  // Suez
+  {lat:30.0444,lng:31.2357},  // Cairo
+  {lat:28.0871,lng:30.7618},  // Beni Suef
+  {lat:25.6872,lng:32.6396},  // Luxor
+  {lat:24.0889,lng:32.8998},  // Aswan
+  // Sudan
+  {lat:21.7547,lng:31.3526},  // Wadi Halfa
+  {lat:18.9200,lng:32.5300},  // Atbara
+  {lat:15.5007,lng:32.5599},  // Khartoum
+  // Ethiopia
+  {lat:12.3646,lng:37.3922},  // Bahir Dar
+  {lat:9.0320, lng:38.7469},  // Addis Ababa
+  {lat:6.8760, lng:38.4955},  // Hawassa
+  // Kenya
+  {lat:3.9373, lng:38.5597},  // Moyale
+  {lat:0.5143, lng:37.4600},  // Isiolo
+  {lat:-1.2921,lng:36.8219},  // Nairobi
+  // Tanzania
+  {lat:-3.3869,lng:36.6830},  // Arusha
+  {lat:-6.1722,lng:35.7395},  // Dodoma
+  {lat:-6.7924,lng:39.2083},  // Dar es Salaam
+  // Zambia
+  {lat:-8.9000,lng:33.4600},  // Mbeya
+  {lat:-10.667,lng:28.6333},  // Nakonde
+  {lat:-15.417,lng:28.2833},  // Lusaka
+  // Zimbabwe / Victoria Falls
+  {lat:-17.842,lng:25.8556},  // Livingstone
+  {lat:-17.924,lng:25.8572},  // Victoria Falls
+  {lat:-20.150,lng:28.5833},  // Bulawayo
+  // Botswana
+  {lat:-21.177,lng:27.5141},  // Francistown
+  {lat:-24.654,lng:25.9087},  // Gaborone
+  // South Africa
+  {lat:-26.715,lng:24.7616},  // Vryburg
+  {lat:-28.448,lng:21.2561},  // Upington
+  {lat:-29.667,lng:19.8833},  // Springbok
+  {lat:-31.590,lng:18.4800},  // Vanrhynsdorp
+  {lat:-33.925,lng:18.4241},  // Cape Town
+  {lat:-33.870,lng:18.6400},  // N1 north — Du Toitskloof direction
+  {lat:-33.810,lng:18.7500},  // N1 Paarl Road exit area
+  {lat:-33.798,lng:18.8600},  // Klapmuts — R44 turnoff
+  {lat:-33.793,lng:18.9200},  // R301 — Val de Vie approach
+  {lat:-33.791944,lng:18.970111},  // Val de Vie Estate — exact GPS
+];
+
+const TOTAL_KM = 11850;
+const RIDDEN   = 612;
+
+// ═══════════════════════════════════════
+// MILESTONES
+// ═══════════════════════════════════════
+const MILESTONES = [
+  {lat:51.1295,lng:1.3089,   km:290,  name:'White Cliffs of Dover',     icon:'🪨', desc:'The southern edge of England. The Channel ahead.',                          img:'https://images.unsplash.com/photo-1557456170-0cf4f4d0d362?w=400&q=75'},
+  {lat:48.8566,lng:2.3522,   km:500,  name:'Paris — Eiffel Tower',       icon:'🗼', desc:'First great city. 500 km from your front door.',                            img:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=75'},
+  {lat:48.5734,lng:13.4508,  km:990,  name:'Passau — Three Rivers',      icon:'🌊', desc:'Where the Danube, Inn and Ilz meet. A road you\'ve ridden.',                img:'https://images.unsplash.com/photo-1555990793-da11153b6909?w=400&q=75'},
+  {lat:48.3600,lng:15.1000,  km:1110, name:'Melk Abbey',                 icon:'⛪', desc:'Baroque monastery above the Danube. One of Europe\'s great views.',         img:'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=75'},
+  {lat:48.4000,lng:15.6000,  km:1145, name:'Wachau Valley',              icon:'🍇', desc:'UNESCO-listed Danube gorge. Vineyards on terraced slopes.',                 img:'https://images.unsplash.com/photo-1566438480900-0609be27a4be?w=400&q=75'},
+  {lat:48.2082,lng:16.3738,  km:1200, name:'Vienna',                     icon:'🎭', desc:'The Imperial City. Schönbrunn, the Ringstraße, the Opera House.',           img:'https://images.unsplash.com/photo-1516550893923-42d28e5677af?w=400&q=75'},
+  {lat:47.4979,lng:19.0402,  km:1450, name:'Budapest',                   icon:'🏛', desc:'Buda and Pest divided by the Danube. The Chain Bridge at dusk.',            img:'https://images.unsplash.com/photo-1541849546-216549ae216d?w=400&q=75'},
+  {lat:44.8176,lng:20.4569,  km:1800, name:'Belgrade',                   icon:'⚓', desc:'Serbia\'s capital where the Sava and Danube meet.',                         img:'https://images.unsplash.com/photo-1609158566497-3c1e2a91a4b4?w=400&q=75'},
+  {lat:41.0082,lng:28.9784,  km:2350, name:'Istanbul — Hagia Sophia',    icon:'🕌', desc:'Where Europe ends and Asia begins. 1,500 years of history.',               img:'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=400&q=75'},
+  {lat:31.9454,lng:35.9284,  km:3420, name:'Amman',                      icon:'🏺', desc:'Jordan\'s capital across seven hills. The ancient Citadel above the city.', img:'https://images.unsplash.com/photo-1544012850-b8b1fcbc4f94?w=400&q=75'},
+  {lat:30.0444,lng:31.2357,  km:3850, name:'Pyramids of Giza',           icon:'🏺', desc:'The last surviving wonder of the ancient world.',                           img:'https://images.unsplash.com/photo-1539650116574-75c0c6e29f2f?w=400&q=75'},
+  {lat:25.6872,lng:32.6396,  km:4350, name:'Luxor — Valley of the Kings',icon:'👑', desc:'Karnak temple. The tombs of the pharaohs. 3,000 years of history.',        img:'https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400&q=75'},
+  {lat:24.0889,lng:32.8998,  km:4550, name:'Aswan',                      icon:'🌅', desc:'The Nile at its most dramatic. Feluccas on golden water.',                  img:'https://images.unsplash.com/photo-1562679299-3b1d6e97a8c0?w=400&q=75'},
+  {lat:15.5007,lng:32.5599,  km:5400, name:'Khartoum — Two Niles',       icon:'🌊', desc:'The Blue Nile and White Nile meet here.',                                   img:'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=400&q=75'},
+  {lat:12.3646,lng:37.3922,  km:5700, name:'Lake Tana & Blue Nile Falls', icon:'💧', desc:'Source of the Blue Nile. Tis Abay falls thunder into the gorge.',           img:'https://images.unsplash.com/photo-1489493887464-892be6d1daae?w=400&q=75'},
+  {lat:0.0000, lng:37.5000,  km:6700, name:'Equator Crossing',           icon:'🌍', desc:'The moment the Southern Hemisphere begins.',                                img:'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=400&q=75'},
+  {lat:-1.2921,lng:36.8219,  km:6850, name:'Nairobi National Park',      icon:'🦁', desc:'Lions with a city skyline behind them. Africa in one frame.',               img:'https://images.unsplash.com/photo-1548574505-5e239809ee19?w=400&q=75'},
+  {lat:-3.3869,lng:36.6830,  km:7100, name:'Arusha — Kilimanjaro View',  icon:'🏔', desc:'Africa\'s highest peak visible from the road on a clear morning.',          img:'https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=400&q=75'},
+  {lat:-17.924,lng:25.8572,  km:9260, name:'Victoria Falls',             icon:'💧', desc:'The smoke that thunders. 1,700 metres wide. Heard before it\'s seen.',      img:'https://images.unsplash.com/photo-1543946602-a0fce8117697?w=400&q=75'},
+  {lat:-33.925,lng:18.4241,  km:11500,name:'Cape Town — Table Mountain', icon:'🏔', desc:'The city beneath the mountain. End of Africa.',                             img:'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=400&q=75'},
+  {lat:-33.791944,lng:18.970111, km:11850,name:'Val de Vie — Finish Line',   icon:'🏆', desc:'Home. The Long Road South is complete.',                                    img:'https://images.unsplash.com/photo-1607268490963-b7873e8cb6b0?w=400&q=75'},
+];
+
+// ═══════════════════════════════════════
+// RIDES
+// ═══════════════════════════════════════
+const RIDES = [
+  {date:'2026-04-12',km:74, total:612,note:'Windy morning through the vineyards. Felt strong.'},
+  {date:'2026-04-08',km:42, total:538,note:'Short one but solid. Legs came good after 20km.'},
+  {date:'2026-04-01',km:68, total:496,note:'SE wind helping on the way back through the valley.'},
+  {date:'2026-03-22',km:47, total:428,note:''},
+  {date:'2026-03-05',km:91, total:381,note:'Over Franschhoek Pass. Brutal. Worth every metre.'},
+  {date:'2026-02-18',km:55, total:290,note:''},
+  {date:'2026-02-02',km:78, total:235,note:'Everything clicked today.'},
+  {date:'2026-01-14',km:38, total:157,note:'Short one. Legs tired from the week.'},
+  {date:'2026-01-07',km:62, total:119,note:''},
+  {date:'2026-01-03',km:57, total:57, note:'First ride of 2026. Cold morning, crisp air, clear head.'},
+];
+
+// ═══════════════════════════════════════
+// WEEKLY + MONTHLY
+// ═══════════════════════════════════════
+function weeklyGroups(rides){
+  const m={};
+  rides.forEach(r=>{
+    const d=new Date(r.date),day=d.getDay();
+    const mon=new Date(d);mon.setDate(d.getDate()-(day===0?6:day-1));
+    const key=mon.toISOString().slice(0,10);
+    if(!m[key])m[key]={start:key,km:0,rides:0,maxTotal:0};
+    m[key].km+=r.km;m[key].rides++;
+    m[key].maxTotal=Math.max(m[key].maxTotal,r.total);
+  });
+  return Object.values(m);
+}
+function monthlyGroups(rides){
+  const m={};
+  rides.forEach(r=>{
+    const key=r.date.slice(0,7);
+    if(!m[key])m[key]={month:key,km:0,rides:0,maxTotal:0};
+    m[key].km+=r.km;m[key].rides++;
+    m[key].maxTotal=Math.max(m[key].maxTotal,r.total);
+  });
+  return Object.values(m);
+}
+
+// ═══════════════════════════════════════
+// MAP INIT
+// ═══════════════════════════════════════
+const map = L.map('map',{
+  center:[30,14], zoom:3,
+  zoomControl:true, attributionControl:false
+});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(map);
+
+// Placeholders — replaced once OSRM returns
+let fullRouteLine  = null;
+let doneRouteLine  = null;
+let youMarker      = null;
+
+// ═══════════════════════════════════════
+// OSRM ROUTING
+// Split into segments of max 10 waypoints
+// OSRM public API: router.project-osrm.org
+// ═══════════════════════════════════════
+function chunkWaypoints(arr, size){
+  const chunks=[];
+  for(let i=0;i<arr.length;i+=size-1){
+    chunks.push(arr.slice(i,Math.min(i+size,arr.length)));
+    if(i+size>=arr.length) break;
+  }
+  return chunks;
+}
+
+async function fetchOSRMSegment(wpts){
+  const coords = wpts.map(w=>`${w.lng},${w.lat}`).join(';');
+  const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error('OSRM error '+r.status);
+  const d = await r.json();
+  if(!d.routes||!d.routes[0]) throw new Error('No route returned');
+  return d.routes[0].geometry.coordinates; // [[lng,lat], ...]
+}
+
+function lngLatToLeaflet(coords){
+  return coords.map(c=>[c[1],c[0]]); // flip to [lat,lng]
+}
+
+// Fraction along full route for a given km
+function fractionForKm(km){
+  return Math.max(0,Math.min(1,km/TOTAL_KM));
+}
+
+// Split a flat array of [lat,lng] at a given fraction
+function splitAtFraction(pts,fraction){
+  if(fraction<=0) return{done:[],ahead:pts};
+  if(fraction>=1) return{done:pts,ahead:[]};
+  const target=Math.floor(pts.length*fraction);
+  return{done:pts.slice(0,target+1),ahead:pts.slice(target)};
+}
+
+// Journal images
+const JIMG={
+  0:   {url:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=75',cap:'Liverpool, England'},
+  55:  {url:'https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=500&q=75',cap:'Chester, England'},
+  240: {url:'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=500&q=75',cap:'London, England'},
+  290: {url:'https://images.unsplash.com/photo-1557456170-0cf4f4d0d362?w=500&q=75',cap:'White Cliffs of Dover'},
+  500: {url:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500&q=75',cap:'Paris, France'},
+  820: {url:'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=500&q=75',cap:'Alsace, France'},
+  990: {url:'https://images.unsplash.com/photo-1555990793-da11153b6909?w=500&q=75',cap:'Passau — three rivers'},
+  1110:{url:'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=75',cap:'Melk Abbey, Danube'},
+  1200:{url:'https://images.unsplash.com/photo-1516550893923-42d28e5677af?w=500&q=75',cap:'Vienna, Austria'},
+  1450:{url:'https://images.unsplash.com/photo-1541849546-216549ae216d?w=500&q=75',cap:'Budapest, Hungary'},
+  1800:{url:'https://images.unsplash.com/photo-1609158566497-3c1e2a91a4b4?w=500&q=75',cap:'Belgrade, Serbia'},
+  2350:{url:'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=500&q=75',cap:'Istanbul, Turkey'},
+  3850:{url:'https://images.unsplash.com/photo-1539650116574-75c0c6e29f2f?w=500&q=75',cap:'Pyramids of Giza, Egypt'},
+  4350:{url:'https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=500&q=75',cap:'Luxor, Egypt'},
+  5400:{url:'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=500&q=75',cap:'Khartoum, Sudan'},
+  5950:{url:'https://images.unsplash.com/photo-1489493887464-892be6d1daae?w=500&q=75',cap:'Ethiopian highlands'},
+  6850:{url:'https://images.unsplash.com/photo-1548574505-5e239809ee19?w=500&q=75',cap:'Nairobi, Kenya'},
+  9260:{url:'https://images.unsplash.com/photo-1543946602-a0fce8117697?w=500&q=75',cap:'Victoria Falls, Zimbabwe'},
+  11500:{url:'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=500&q=75',cap:'Cape Town, South Africa'},
+};
+function getImg(km){
+  const keys=Object.keys(JIMG).map(Number).sort((a,b)=>a-b);
+  let best=keys[0];
+  for(const k of keys){if(k<=km)best=k;else break;}
+  return JIMG[best];
+}
+
+function nearestWpName(km){
+  const NAMES=[
+    {km:0,name:'Liverpool'},{km:55,name:'Chester'},{km:240,name:'London'},
+    {km:290,name:'Dover'},{km:500,name:'Paris'},{km:820,name:'Alsace'},
+    {km:990,name:'Passau'},{km:1110,name:'Melk'},{km:1145,name:'Wachau Valley'},
+    {km:1200,name:'Vienna'},{km:1450,name:'Budapest'},{km:1800,name:'Belgrade'},
+    {km:2100,name:'Sofia'},{km:2350,name:'Istanbul'},{km:3420,name:'Amman'},
+    {km:3850,name:'Cairo'},{km:4350,name:'Luxor'},{km:4550,name:'Aswan'},
+    {km:5400,name:'Khartoum'},{km:5950,name:'Addis Ababa'},{km:6850,name:'Nairobi'},
+    {km:7100,name:'Arusha'},{km:7600,name:'Dar es Salaam'},{km:8900,name:'Lusaka'},
+    {km:9260,name:'Victoria Falls'},{km:10200,name:'Gaborone'},{km:10750,name:'Upington'},
+    {km:11500,name:'Cape Town'},{km:11600,name:'Stellenbosch'},{km:11700,name:'Franschhoek'},
+    {km:11800,name:'Paarl'},{km:11850,name:'Val de Vie'},
+  ];
+  let best=NAMES[0];
+  for(const n of NAMES){if(n.km<=km)best=n;else break;}
+  return best.name;
+}
+
+// ═══════════════════════════════════════
+// MAIN — fetch route then draw everything
+// ═══════════════════════════════════════
+async function init(){
+  const statusEl = document.getElementById('route-status');
+  const introStatusEl = document.getElementById('intro-status');
+  const fallbackCoords = WAYPOINTS.map(w=>[w.lat,w.lng]);
+
+  // STEP 1 — draw immediately from waypoints so nothing is ever blank
+  const cutIdx = Math.round(WAYPOINTS.length * (RIDDEN / TOTAL_KM));
+  const donePts = fallbackCoords.slice(0, Math.max(cutIdx + 1, 1));
+  const youFallback = donePts[donePts.length - 1];
+
+  fullRouteLine = L.polyline(fallbackCoords, {color:'#4A90C4', weight:2.5, opacity:0.5}).addTo(map);
+  doneRouteLine = L.polyline(donePts, {color:'#C84B2F', weight:3.5, opacity:0.9}).addTo(map);
+  addYouMarker(youFallback[0], youFallback[1]);
+
+  addMilestones();
+  addPeriodMarkers();
+  addRideMarkers();
+
+  // Fit full route on screen
+  map.fitBounds(L.latLngBounds(fallbackCoords), {padding:[40,40]});
+
+  // Dismiss intro after 2.5s regardless of OSRM
+  setTimeout(function(){ document.getElementById('intro').classList.add('gone'); }, 2500);
+
+  // Fly to current virtual position (near Paris at 612km)
+  setTimeout(function(){
+    map.flyTo([48.85, 2.35], 5, {duration:2.5, easeLinearity:0.3});
+  }, 3200);
+
+  // STEP 2 — upgrade to real roads via OSRM in the background
+  statusEl.textContent = 'Upgrading to real road geometry...';
+  introStatusEl.textContent = 'Upgrading to real roads...';
+
+  var chunks = chunkWaypoints(WAYPOINTS, 10);
+  var allCoords = [];
+
+  try {
+    for (var i = 0; i < chunks.length; i++) {
+      statusEl.textContent = 'Road geometry ' + (i+1) + '/' + chunks.length + '...';
+      var seg = await fetchOSRMSegment(chunks[i]);
+      var leafletSeg = lngLatToLeaflet(seg);
+      if (allCoords.length > 0) leafletSeg.shift();
+      allCoords = allCoords.concat(leafletSeg);
+
+      // Progressive draw as each segment arrives
+      if (fullRouteLine) { map.removeLayer(fullRouteLine); }
+      fullRouteLine = L.polyline(allCoords, {color:'#4A90C4', weight:2.5, opacity:0.5}).addTo(map);
+    }
+
+    // Final: split at ridden fraction
+    if (fullRouteLine) map.removeLayer(fullRouteLine);
+    if (doneRouteLine) map.removeLayer(doneRouteLine);
+
+    var fraction = RIDDEN / TOTAL_KM;
+    var split = splitAtFraction(allCoords, fraction);
+    var rdone = split.done;
+
+    fullRouteLine = L.polyline(allCoords, {color:'#4A90C4', weight:2.5, opacity:0.5}).addTo(map);
+    doneRouteLine = L.polyline(rdone, {color:'#C84B2F', weight:3.5, opacity:0.92}).addTo(map);
+
+    var youPt = rdone.length > 0 ? rdone[rdone.length - 1] : allCoords[0];
+    addYouMarker(youPt[0], youPt[1]);
+    statusEl.classList.add('done');
+
+  } catch(err) {
+    console.warn('OSRM unavailable — keeping straight-line route:', err.message);
+    statusEl.textContent = 'Approximate route (connect to internet for real roads)';
+    setTimeout(function(){ statusEl.classList.add('done'); }, 4000);
+  }
+}
+
+function addYouMarker(lat, lng){
+  if(youMarker) map.removeLayer(youMarker);
+  var el = document.createElement('div');
+  el.className = 'you-dot';
+  var icon = L.divIcon({html:el, className:'', iconSize:[16,16], iconAnchor:[8,8]});
+  var nxt = MILESTONES.find(function(m){ return m.km > RIDDEN; });
+  youMarker = L.marker([lat,lng], {icon:icon, zIndexOffset:1000})
+    .bindPopup(
+      '<div class="p-eye">You are here</div>' +
+      '<div class="p-name">\u{1F4CD} Near ' + nearestWpName(RIDDEN) + '</div>' +
+      '<div class="p-km">' + RIDDEN + ' km from Liverpool</div>' +
+      '<div class="p-desc">' + (nxt ? (nxt.km-RIDDEN).toLocaleString() + ' km to ' + nxt.name + ' ' + nxt.icon : 'Almost there!') + '</div>',
+      {maxWidth:220}
+    )
+    .addTo(map);
+}
+
+function addMilestones(){
+  MILESTONES.forEach(function(m){
+    var done = m.km <= RIDDEN;
+    var el = document.createElement('div');
+    el.className = 'm-milestone' + (done ? '' : ' ahead');
+    var icon = L.divIcon({html:el, className:'', iconSize:[12,12], iconAnchor:[6,6]});
+    var statusHtml = done
+      ? '<div class="p-pass">\u2713 Passed at ' + m.km.toLocaleString() + ' km</div>'
+      : '<div class="p-ahead">' + (m.km-RIDDEN).toLocaleString() + ' km ahead</div>';
+    L.marker([m.lat, m.lng], {icon:icon})
+      .bindPopup(
+        '<div class="p-eye">Milestone</div>' +
+        '<div class="p-name">' + m.icon + ' ' + m.name + '</div>' +
+        '<div class="p-km">' + m.km.toLocaleString() + ' km from Liverpool</div>' +
+        '<img class="p-img" src="' + m.img + '" alt="' + m.name + '" loading="lazy">' +
+        '<div class="p-desc">' + m.desc + '</div>' +
+        statusHtml,
+        {maxWidth:260}
+      )
+      .addTo(map);
+  });
+}
+
+function addPeriodMarkers(){
+  monthlyGroups(RIDES).forEach(function(mo){
+    var frac = mo.maxTotal / TOTAL_KM;
+    var idx = Math.min(Math.floor(frac * WAYPOINTS.length), WAYPOINTS.length-1);
+    var w = WAYPOINTS[idx];
+    var el = document.createElement('div'); el.className = 'm-month';
+    var icon = L.divIcon({html:el, className:'', iconSize:[11,11], iconAnchor:[5,5]});
+    var d = new Date(mo.month+'-01');
+    var nm = d.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+    L.marker([w.lat,w.lng],{icon:icon})
+      .bindPopup(
+        '<div class="p-mlbl">Monthly total</div>' +
+        '<div class="p-name">' + nm + '</div>' +
+        '<div class="p-km">' + mo.km + ' km \u00B7 ' + mo.rides + ' ride' + (mo.rides>1?'s':'') + '</div>' +
+        '<div class="p-desc">Virtually near ' + nearestWpName(mo.maxTotal) + '</div>',
+        {maxWidth:220}
+      ).addTo(map);
+  });
+
+  weeklyGroups(RIDES).forEach(function(wk){
+    var frac = wk.maxTotal / TOTAL_KM;
+    var idx = Math.min(Math.floor(frac * WAYPOINTS.length), WAYPOINTS.length-1);
+    var w = WAYPOINTS[idx];
+    var el = document.createElement('div'); el.className = 'm-week';
+    var icon = L.divIcon({html:el, className:'', iconSize:[8,8], iconAnchor:[4,4]});
+    var d = new Date(wk.start);
+    var nm = 'Week of ' + d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    L.marker([w.lat,w.lng],{icon:icon})
+      .bindPopup(
+        '<div class="p-wlbl">Weekly total</div>' +
+        '<div class="p-name">' + nm + '</div>' +
+        '<div class="p-km">' + wk.km + ' km \u00B7 ' + wk.rides + ' ride' + (wk.rides>1?'s':'') + '</div>' +
+        '<div class="p-desc">Virtually near ' + nearestWpName(wk.maxTotal) + '</div>',
+        {maxWidth:220}
+      ).addTo(map);
+  });
+}
+
+function addRideMarkers(){
+  RIDES.forEach(function(r){
+    var frac = r.total / TOTAL_KM;
+    var idx = Math.min(Math.floor(frac * WAYPOINTS.length), WAYPOINTS.length-1);
+    var w = WAYPOINTS[idx];
+    var el = document.createElement('div'); el.className = 'm-ride';
+    var icon = L.divIcon({html:el, className:'', iconSize:[6,6], iconAnchor:[3,3]});
+    var d = new Date(r.date);
+    var ds = d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    L.marker([w.lat,w.lng],{icon:icon})
+      .bindPopup(
+        '<div class="p-eye">Ride</div>' +
+        '<div class="p-name">' + ds + ' \u00B7 ' + r.km + ' km</div>' +
+        '<div class="p-km">Total: ' + r.total + ' km</div>' +
+        '<div class="p-desc">Near ' + nearestWpName(r.total) + (r.note ? '<br><br><em>' + r.note + '</em>' : '') + '</div>',
+        {maxWidth:220}
+      ).addTo(map);
+  });
+}
+
+// Journal
+var jEl = document.getElementById('journal');
+RIDES.forEach(function(r){
+  var d = new Date(r.date);
+  var ds = d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  var img = getImg(r.total);
+  var div = document.createElement('div');
+  div.className = 'entry';
+  div.innerHTML =
+    '<div class="entry-header">' +
+      '<div class="entry-date">' + ds + '</div>' +
+      '<div class="entry-km">' + r.km + ' km</div>' +
+    '</div>' +
+    '<div class="entry-total">Total: ' + r.total.toLocaleString() + ' km</div>' +
+    '<div class="entry-virt">\u{1F4CD} <span>Virtually near ' + nearestWpName(r.total) + '</span></div>' +
+    '<img class="entry-photo" src="' + img.url + '" alt="" loading="lazy">' +
+    '<div class="entry-cap">' + img.cap + '</div>' +
+    (r.note ? '<div class="entry-note">' + r.note + '</div>' : '');
+  jEl.appendChild(div);
+});
+
+// Panel toggle
+var open = true;
+function togglePanel(){
+  open = !open;
+  document.getElementById('panel').classList.toggle('hidden', !open);
+  var t = document.getElementById('ptoggle');
+  t.textContent = open ? 'HIDE' : 'JOURNAL';
+  t.style.right = open ? 'var(--pw)' : '0';
+  setTimeout(function(){ map.invalidateSize(); }, 350);
+}
+
+// Start
+init();
+
+</script>
+</body>
+</html>
