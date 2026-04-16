@@ -299,7 +299,8 @@ const WAYPOINTS = [
 ];
 
 const TOTAL_KM = 11850;
-const RIDDEN   = 612;
+let RIDDEN = 0; // computed from rides.json
+let RIDES  = []; // loaded from rides.json
 
 // ═══════════════════════════════════════
 // MILESTONES
@@ -331,19 +332,7 @@ const MILESTONES = [
 // ═══════════════════════════════════════
 // RIDES
 // ═══════════════════════════════════════
-const RIDES = [
-  {date:'2026-04-12',km:74, total:612,note:'Windy morning through the vineyards. Felt strong.'},
-  {date:'2026-04-08',km:42, total:538,note:'Short one but solid. Legs came good after 20km.'},
-  {date:'2026-04-01',km:68, total:496,note:'SE wind helping on the way back through the valley.'},
-  {date:'2026-03-22',km:47, total:428,note:''},
-  {date:'2026-03-05',km:91, total:381,note:'Over Franschhoek Pass. Brutal. Worth every metre.'},
-  {date:'2026-02-18',km:55, total:290,note:''},
-  {date:'2026-02-02',km:78, total:235,note:'Everything clicked today.'},
-  {date:'2026-01-14',km:38, total:157,note:'Short one. Legs tired from the week.'},
-  {date:'2026-01-07',km:62, total:119,note:''},
-  {date:'2026-01-03',km:57, total:57, note:'First ride of 2026. Cold morning, crisp air, clear head.'},
-];
-
+// RIDES loaded dynamically from rides.json (see fetchRides below)
 // ═══════════════════════════════════════
 // WEEKLY + MONTHLY
 // ═══════════════════════════════════════
@@ -645,40 +634,110 @@ function addRideMarkers(){
   });
 }
 
-// Journal
-var jEl = document.getElementById('journal');
-RIDES.forEach(function(r){
-  var d = new Date(r.date);
-  var ds = d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  var img = getImg(r.total);
-  var div = document.createElement('div');
-  div.className = 'entry';
-  div.innerHTML =
-    '<div class="entry-header">' +
-      '<div class="entry-date">' + ds + '</div>' +
-      '<div class="entry-km">' + r.km + ' km</div>' +
-    '</div>' +
-    '<div class="entry-total">Total: ' + r.total.toLocaleString() + ' km</div>' +
-    '<div class="entry-virt">\u{1F4CD} <span>Virtually near ' + nearestWpName(r.total) + '</span></div>' +
-    '<img class="entry-photo" src="' + img.url + '" alt="" loading="lazy">' +
-    '<div class="entry-cap">' + img.cap + '</div>' +
-    (r.note ? '<div class="entry-note">' + r.note + '</div>' : '');
-  jEl.appendChild(div);
-});
-
-// Panel toggle
-var open = true;
-function togglePanel(){
-  open = !open;
-  document.getElementById('panel').classList.toggle('hidden', !open);
-  var t = document.getElementById('ptoggle');
-  t.textContent = open ? 'HIDE' : 'JOURNAL';
-  t.style.right = open ? 'var(--pw)' : '0';
-  setTimeout(function(){ map.invalidateSize(); }, 350);
+// Fetch rides.json then boot everything dynamically
+async function fetchRides() {
+  try {
+    var res = await fetch('rides.json?v=' + Date.now());
+    return await res.json();
+  } catch(e) {
+    console.warn('Could not load rides.json:', e.message);
+    return [];
+  }
 }
 
-// Start
-init();
+function computeFromRides(rides) {
+  rides.sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
+  var running = 0;
+  rides.forEach(function(r){ running += r.km; r.total = Math.round(running*10)/10; });
+  return { total: Math.round(running*10)/10, rides: rides.slice().reverse() };
+}
+
+function updatePanel(ridden) {
+  var pct  = ((ridden/TOTAL_KM)*100).toFixed(1);
+  var near = nearestWpName(ridden);
+  var img  = getImg(ridden);
+  var nxt  = MILESTONES.find(function(m){ return m.km > ridden; });
+  var days = Math.floor((new Date()-new Date('2026-01-01'))/(1000*60*60*24));
+
+  // Header stats
+  var hv = document.querySelectorAll('.hstat-val');
+  if(hv[0]) hv[0].textContent = ridden.toLocaleString()+' km';
+  if(hv[1]) hv[1].textContent = pct+'%';
+  if(hv[2]) hv[2].textContent = days;
+
+  // Intro splash
+  var iKm = document.getElementById('i-km');
+  if(iKm) iKm.textContent = ridden.toLocaleString()+' km ridden - Virtually near '+near;
+
+  // Position card
+  var pp = document.querySelector('.pos-place');
+  if(pp) pp.textContent = 'Near '+near;
+  var pf = document.querySelector('.prog-fill');
+  if(pf) pf.style.width = pct+'%';
+  var pl = document.querySelectorAll('.prog-labels span');
+  if(pl[1]) pl[1].textContent = pct+'%';
+
+  // km stats
+  var kv = document.querySelectorAll('.km-val');
+  if(kv[0]) kv[0].textContent = ridden.toLocaleString();
+  if(kv[1]) kv[1].textContent = (TOTAL_KM-ridden).toLocaleString();
+  var wk  = Math.max(days/7, 1);
+  var eta = new Date();
+  eta.setDate(eta.getDate() + Math.round(((TOTAL_KM-ridden)/(ridden/wk))*7));
+  if(kv[2]) kv[2].textContent = eta.getFullYear();
+
+  // Location image
+  var li = document.querySelector('.loc-img img');
+  var lc = document.querySelector('.loc-cap');
+  if(li) li.src = img.url;
+  if(lc) lc.textContent = img.cap;
+
+  // Next milestone card
+  if(nxt) {
+    var mi = document.querySelector('.ms-icon');
+    var mn = document.querySelector('.ms-name');
+    var mk = document.querySelector('.ms-km');
+    if(mi) mi.textContent = nxt.icon;
+    if(mn) mn.textContent = nxt.name;
+    if(mk) mk.textContent = (nxt.km-ridden).toLocaleString()+' km away';
+  }
+}
+
+function buildJournal(rides) {
+  var jEl = document.getElementById('journal');
+  if(!jEl) return;
+  jEl.innerHTML = '';
+  rides.forEach(function(r) {
+    var d  = new Date(r.date);
+    var ds = d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    var img= getImg(r.total);
+    var wp = nearestWpName(r.total);
+    var div= document.createElement('div');
+    div.className = 'entry';
+    div.innerHTML =
+      '<div class="entry-header">'+
+        '<div class="entry-date">'+ds+'</div>'+
+        '<div class="entry-km">'+r.km+' km</div>'+
+      '</div>'+
+      '<div class="entry-total">Total: '+r.total.toLocaleString()+' km</div>'+
+      '<div class="entry-virt">&#x1F4CD; <span>Virtually near '+wp+'</span></div>'+
+      '<img class="entry-photo" src="'+img.url+'" alt="" loading="lazy">'+
+      '<div class="entry-cap">'+img.cap+'</div>'+
+      (r.note ? '<div class="entry-note">'+r.note+'</div>' : '');
+    jEl.appendChild(div);
+  });
+}
+
+(async function boot() {
+  var raw      = await fetchRides();
+  var computed = computeFromRides(raw);
+  RIDDEN = computed.total;
+  RIDES  = computed.rides;
+  updatePanel(RIDDEN);
+  buildJournal(RIDES);
+  init();
+})();
+
 
 </script>
 </body>
