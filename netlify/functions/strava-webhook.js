@@ -143,14 +143,11 @@ async function handleActivity(body) {
   // Build the ride entry
   const km = Math.round((activity.distance / 1000) * 10) / 10;
   const newRide = {
-    date:       activity.start_date_local.slice(0, 10),
+    date:      activity.start_date_local.slice(0, 10),
     km,
-    elevation:  Math.round(activity.total_elevation_gain),
-    duration:   formatDuration(activity.moving_time),
-    strava_id:  String(body.object_id),
-    name:       activity.name || '',
-    note:       '',   // you can add journal notes manually in rides.json
-    source:     'strava',
+    strava_id: String(body.object_id),
+    note:      '',
+    source:    'strava',
   };
 
   // Read existing rides, check for duplicates
