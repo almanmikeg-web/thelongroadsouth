@@ -1,34 +1,214 @@
 [
   {
     "date": "2026-04-12",
-    "km": 74,
+    "km": 23.4,
     "elevation": 0,
     "duration": "",
     "strava_id": "",
-    "note": "Vineyards looking stunning. Felt strong all the way.",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-04-09",
+    "km": 16.2,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
     "source": "manual"
   },
   {
     "date": "2026-04-08",
-    "km": 42,
+    "km": 12.6,
     "elevation": 0,
     "duration": "",
     "strava_id": "",
-    "note": "Short one but solid. Legs came good after 20km.",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-04-07",
+    "km": 16.0,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-04-05",
+    "km": 23.2,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-04-04",
+    "km": 18.0,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
     "source": "manual"
   },
   {
     "date": "2026-04-01",
-    "km": 68,
+    "km": 15.4,
     "elevation": 0,
     "duration": "",
     "strava_id": "",
-    "note": "SE wind helping on the way back through the valley.",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-31",
+    "km": 15.5,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-29",
+    "km": 17.2,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-28",
+    "km": 16.5,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-26",
+    "km": 20.7,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-25",
+    "km": 13.5,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-24",
+    "km": 16.9,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
     "source": "manual"
   },
   {
     "date": "2026-03-22",
-    "km": 47,
+    "km": 19.7,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-21",
+    "km": 10.3,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-19",
+    "km": 20.0,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-18",
+    "km": 20.0,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-15",
+    "km": 21.0,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-14",
+    "km": 20.0,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-13",
+    "km": 20.2,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-11",
+    "km": 17.2,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-10",
+    "km": 20.1,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-08",
+    "km": 28.5,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-07",
+    "km": 18.6,
     "elevation": 0,
     "duration": "",
     "strava_id": "",
@@ -37,16 +217,124 @@
   },
   {
     "date": "2026-03-05",
-    "km": 91,
-    "elevation": 820,
+    "km": 21.7,
+    "elevation": 0,
     "duration": "",
     "strava_id": "",
-    "note": "Over Franschhoek Pass. Brutal. Worth every metre.",
+    "note": "",
     "source": "manual"
   },
   {
-    "date": "2026-02-18",
-    "km": 55,
+    "date": "2026-03-03",
+    "km": 14.9,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-03-01",
+    "km": 24.7,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-27",
+    "km": 12.0,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-25",
+    "km": 16.6,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-22",
+    "km": 25.4,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-21",
+    "km": 22.4,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-17",
+    "km": 18.6,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-16",
+    "km": 16.1,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-14",
+    "km": 15.6,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-11",
+    "km": 18.3,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-08",
+    "km": 20.2,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-07",
+    "km": 19.1,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-02-05",
+    "km": 15.3,
     "elevation": 0,
     "duration": "",
     "strava_id": "",
@@ -55,25 +343,7 @@
   },
   {
     "date": "2026-02-02",
-    "km": 78,
-    "elevation": 0,
-    "duration": "",
-    "strava_id": "",
-    "note": "Everything clicked today.",
-    "source": "manual"
-  },
-  {
-    "date": "2026-01-14",
-    "km": 38,
-    "elevation": 0,
-    "duration": "",
-    "strava_id": "",
-    "note": "Short one. Legs tired from the week.",
-    "source": "manual"
-  },
-  {
-    "date": "2026-01-07",
-    "km": 62,
+    "km": 16.3,
     "elevation": 0,
     "duration": "",
     "strava_id": "",
@@ -81,12 +351,111 @@
     "source": "manual"
   },
   {
-    "date": "2026-01-03",
-    "km": 57,
+    "date": "2026-01-31",
+    "km": 17.6,
     "elevation": 0,
     "duration": "",
     "strava_id": "",
-    "note": "First ride of 2026. Cold morning, crisp air, clear head.",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-29",
+    "km": 11.1,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-28",
+    "km": 7.8,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-26",
+    "km": 16.6,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-25",
+    "km": 15.9,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-23",
+    "km": 13.3,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-22",
+    "km": 12.0,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-20",
+    "km": 12.3,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-16",
+    "km": 12.7,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-13",
+    "km": 13.1,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-12",
+    "km": 11.6,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
+    "source": "manual"
+  },
+  {
+    "date": "2026-01-09",
+    "km": 8.4,
+    "elevation": 0,
+    "duration": "",
+    "strava_id": "",
+    "note": "",
     "source": "manual"
   }
 ]
