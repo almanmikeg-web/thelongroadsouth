@@ -226,10 +226,11 @@
       </div>
     </div>
     <div class="loc-img">
-      <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=80" alt="Paris">
+      <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=80" alt="" style="transition:opacity 0.6s ease">
       <div class="loc-cap">
         <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;margin-bottom:3px">Virtually here</div>
-        <div class="loc-cap-name" style="font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase">Paris, France</div>
+        <div class="loc-cap-name" style="font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase">Loading...</div>
+        <div id="photo-credit" style="font-family:var(--font-mono);font-size:9px;opacity:0.6;margin-top:2px"></div>
       </div>
     </div>
     <div class="ms-card">
@@ -393,7 +394,24 @@ const WAYPOINTS = [
 ];
 
 const TOTAL_KM = 11850;
-let RIDDEN = 0; // computed from rides.json
+let RIDDEN = 0;
+
+// Interpolate exact lat/lng for any km value along the route
+function getVirtualLatLng(km) {
+  if (!km || km <= 0) return {lat:WAYPOINTS[0].lat, lng:WAYPOINTS[0].lng};
+  var fraction = km / TOTAL_KM;
+  var idx = Math.min(
+    Math.floor(fraction * (WAYPOINTS.length - 1)),
+    WAYPOINTS.length - 2
+  );
+  var a = WAYPOINTS[idx];
+  var b = WAYPOINTS[idx + 1];
+  var t = (fraction * (WAYPOINTS.length - 1)) - idx;
+  return {
+    lat: a.lat + (b.lat - a.lat) * t,
+    lng: a.lng + (b.lng - a.lng) * t
+  };
+} // computed from rides.json
 let RIDES  = []; // loaded from rides.json
 
 // ═══════════════════════════════════════
@@ -805,6 +823,86 @@ function updatePanel(ridden) {
   }
 }
 
+// Fetch dynamic location photo from our serverless function
+async function fetchLocationPhoto(lat, lng, km) {
+  // Check localStorage cache first (keyed by rounded km to nearest 5)
+  var cacheKey = 'lp_' + Math.round(km / 5) * 5;
+  try {
+    var cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      var data = JSON.parse(cached);
+      if (data && data.photo) {
+        applyLocationPhoto(data);
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Show loading state
+  var li = document.querySelector('.loc-img img');
+  var lc = document.querySelector('.loc-cap-name');
+  if (lc) lc.textContent = 'Loading...';
+
+  try {
+    var res = await fetch(
+      '/.netlify/functions/location-photo?lat=' + lat.toFixed(5) +
+      '&lng=' + lng.toFixed(5) + '&km=' + Math.round(km)
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+
+    // Cache it
+    try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch(e) {}
+
+    applyLocationPhoto(data);
+  } catch(err) {
+    console.warn('Location photo fetch failed:', err.message);
+    if (lc) lc.textContent = 'On the road';
+  }
+}
+
+function applyLocationPhoto(data) {
+  var li = document.querySelector('.loc-img img');
+  var lc = document.querySelector('.loc-cap-name');
+  var credit = document.getElementById('photo-credit');
+
+  if (data.placeName && lc) lc.textContent = data.placeName;
+
+  if (data.photo && data.photo.url) {
+    if (li) {
+      li.style.opacity = '0';
+      li.src = data.photo.url;
+      li.onload = function() {
+        li.style.transition = 'opacity 0.6s ease';
+        li.style.opacity = '1';
+      };
+    }
+    if (credit && data.photo.credit) {
+      credit.innerHTML = 'Photo: <a href="' + (data.photo.creditUrl || '#') +
+        '" target="_blank" style="color:rgba(255,255,255,0.8)">' +
+        data.photo.credit + '</a> / Unsplash';
+    }
+  }
+}
+
+function applyEntryPhoto(data, iId, pId, cId) {
+  var el = document.getElementById(iId);
+  var pl = document.getElementById(pId);
+  var cp = document.getElementById(cId);
+  if (data.placeName && pl) pl.textContent = 'Virtually near ' + data.placeName;
+  if (data.photo && data.photo.url && el) {
+    el.style.opacity = '0';
+    el.src = data.photo.url;
+    el.onload = function() {
+      el.style.transition = 'opacity 0.5s ease';
+      el.style.opacity = '1';
+    };
+  }
+  if (cp && data.photo && data.photo.credit) {
+    cp.textContent = 'Photo: ' + data.photo.credit + ' / Unsplash';
+  }
+}
+
 function buildJournal(rides) {
   var jEl = document.getElementById('journal');
   if(!jEl) return;
@@ -812,21 +910,46 @@ function buildJournal(rides) {
   rides.forEach(function(r) {
     var d  = new Date(r.date);
     var ds = d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    var img= getImg(r.total);
-    var wp = nearestWpName(r.total);
-    var div= document.createElement('div');
+    var wp  = nearestWpName(r.total);
+    var vll = getVirtualLatLng(r.total);
+    var div = document.createElement('div');
     div.className = 'entry';
+    var imgId     = 'eimg-'  + r.total;
+    var placeElId = 'eplace-' + r.total;
+    var capElId   = 'ecap-'  + r.total;
     div.innerHTML =
       '<div class="entry-header">'+
         '<div class="entry-date">'+ds+'</div>'+
         '<div class="entry-km">'+r.km+' km</div>'+
       '</div>'+
       '<div class="entry-total">Total: '+r.total.toLocaleString()+' km</div>'+
-      '<div class="entry-virt">&#x1F4CD; <span>Virtually near '+wp+'</span></div>'+
-      '<img class="entry-photo" src="'+img.url+'" alt="" loading="lazy">'+
-      '<div class="entry-cap">'+img.cap+'</div>'+
+      '<div class="entry-virt">&#x1F4CD; <span id="'+placeElId+'">Virtually near '+wp+'</span></div>'+
+      '<img id="'+imgId+'" class="entry-photo" src="" alt="" style="background:var(--border)">'+
+      '<div class="entry-cap" id="'+capElId+'"></div>'+
       (r.note ? '<div class="entry-note">'+r.note+'</div>' : '');
     jEl.appendChild(div);
+
+    // Lazy-load photo via IntersectionObserver
+    (function(total, lat, lng, iId, pId, cId) {
+      var cKey = 'lp_' + (Math.round(total/5)*5);
+      try {
+        var hit = localStorage.getItem(cKey);
+        if (hit) { applyEntryPhoto(JSON.parse(hit), iId, pId, cId); return; }
+      } catch(e) {}
+      var el = document.getElementById(iId);
+      if (!el) return;
+      var obs = new IntersectionObserver(function(entries) {
+        if (!entries[0].isIntersecting) return;
+        obs.disconnect();
+        fetch('/.netlify/functions/location-photo?lat='+lat.toFixed(5)+'&lng='+lng.toFixed(5)+'&km='+Math.round(total))
+          .then(function(r){return r.json();})
+          .then(function(d){
+            try{localStorage.setItem(cKey,JSON.stringify(d));}catch(e){}
+            applyEntryPhoto(d, iId, pId, cId);
+          }).catch(function(){});
+      },{rootMargin:'200px'});
+      obs.observe(el);
+    })(r.total, vll.lat, vll.lng, imgId, placeElId, capElId);
   });
 }
 
@@ -837,6 +960,11 @@ function buildJournal(rides) {
   RIDES  = computed.rides;
   updatePanel(RIDDEN);
   buildJournal(RIDES);
+
+  // Fetch dynamic location photo for current virtual position
+  var vll = getVirtualLatLng(RIDDEN);
+  if (vll) fetchLocationPhoto(vll.lat, vll.lng, RIDDEN);
+
   init();
 })();
 
