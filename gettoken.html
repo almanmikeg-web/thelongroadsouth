@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Strava Token Exchange</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 60px auto; padding: 20px; }
+    button { background: #FC4C02; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; }
+    pre { background: #f4f4f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 13px; }
+    .big { font-size: 18px; font-weight: bold; color: #FC4C02; word-break: break-all; }
+    input { width: 100%; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; margin: 6px 0 16px; }
+  </style>
+</head>
+<body>
+  <h2>Strava Token Exchanger</h2>
+  <p>Step 1 — Click the button to authorise:</p>
+  <button onclick="authorize()">Authorize with Strava</button>
+
+  <div id="exchange" style="display:none; margin-top:30px;">
+    <h3>Step 2 — Exchange code for tokens</h3>
+    <p>Enter your Client Secret:</p>
+    <input type="text" id="secret" placeholder="paste client secret here">
+    <button onclick="exchange()">Get Refresh Token</button>
+  </div>
+
+  <div id="result" style="margin-top:30px;"></div>
+
+  <script>
+    const CLIENT_ID = '226050';
+    const REDIRECT  = window.location.href.split('?')[0];
+
+    function authorize() {
+      window.location.href =
+        'https://www.strava.com/oauth/authorize' +
+        '?client_id=' + CLIENT_ID +
+        '&redirect_uri=' + encodeURIComponent(REDIRECT) +
+        '&response_type=code' +
+        '&scope=activity:read_all';
+    }
+
+    // Check if we were redirected back with a code
+    const params = new URLSearchParams(window.location.search);
+    const code   = params.get('code');
+    if (code) {
+      document.getElementById('exchange').style.display = 'block';
+      document.getElementById('result').innerHTML =
+        '<p>Code received: <code>' + code + '</code></p><p>Now enter your secret and click Get Refresh Token.</p>';
+    }
+
+    async function exchange() {
+      const secret = document.getElementById('secret').value.trim();
+      if (!secret) { alert('Please enter your client secret'); return; }
+
+      const res = await fetch('https://www.strava.com/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id:     CLIENT_ID,
+          client_secret: secret,
+          code:          code,
+          grant_type:    'authorization_code'
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.refresh_token) {
+        document.getElementById('result').innerHTML =
+          '<h3 style="color:green">Success!</h3>' +
+          '<p>Your <strong>Refresh Token</strong> (copy this into Netlify):</p>' +
+          '<div class="big">' + data.refresh_token + '</div>' +
+          '<br><p>Full response:</p><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+      } else {
+        document.getElementById('result').innerHTML =
+          '<h3 style="color:red">Error</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+      }
+    }
+  </script>
+</body>
+</html>
