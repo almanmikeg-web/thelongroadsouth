@@ -114,7 +114,7 @@
     .km-lbl{font-family:var(--font-mono);font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-secondary);margin-top:2px}
 
     /* ── LOCATION IMG ── */
-    .loc-img{border-radius:8px;overflow:hidden;margin-bottom:12px;height:180px;background:var(--border);position:relative}
+    .loc-img{border-radius:8px;overflow:hidden;margin-bottom:12px;height:220px;background:var(--border);position:relative}
     .loc-img img{width:100%;height:100%;object-fit:cover}
     .loc-cap{position:absolute;bottom:0;left:0;right:0;padding:12px 14px;background:linear-gradient(transparent,rgba(0,0,0,0.7));font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.9);letter-spacing:0.04em}
 
@@ -397,7 +397,7 @@ const TOTAL_KM = 11850;
 let RIDDEN = 0;
 
 // Pre-computed cumulative km for each waypoint (haversine-scaled to TOTAL_KM)
-var WP_KM = [0,9,27,53,80,114,143,166,184,209,244,254,293,324,342,377,418,456,500,553,591,609,678,723,823,963,1001,1087,1143,1197,1233,1277,1328,1347,1366,1382,1405,1421,1443,1455,1469,1499,1503,1504,1527,1552,1590,1654,1699,1720,1735,1937,1992,2035,2109,2189,2296,2525,2695,2761,2952,3182,3379,3495,3816,3870,4095,4286,4387,4563,4821,4963,5204,5471,5773,6269,6585,6776,7035,7352,7521,7705,7964,8273,8807,9254,9673,9969,9976,10276,10403,10735,10938,11251,11402,11602,11808,11824,11834,11842,11846,11850];
+var WP_KM = [0,9,27,53,80,114,143,166,184,209,244,254,293,324,342,377,418,456,500,553,591,609,678,723,823,963,1001,1087,1143,1197,1233,1277,1328,1347,1366,1382,1405,1421,1443,1455,1469,1499,1503,1527,1552,1590,1654,1699,1720,1735,1937,1992,2035,2109,2189,2296,2525,2695,2761,2952,3182,3379,3495,3816,3870,4095,4286,4387,4563,4821,4963,5204,5471,5773,6269,6585,6776,7035,7352,7521,7705,7964,8273,8807,9254,9673,9969,9976,10276,10403,10735,10938,11251,11402,11602,11808,11824,11834,11842,11846,11850];
 
 // Interpolate exact lat/lng using actual km distances between waypoints
 function getVirtualLatLng(km) {
@@ -524,11 +524,37 @@ function fractionForKm(km){
 }
 
 // Split a flat array of [lat,lng] at a given fraction
-function splitAtFraction(pts,fraction){
+function splitAtFraction(pts, fraction){
   if(fraction<=0) return{done:[],ahead:pts};
   if(fraction>=1) return{done:pts,ahead:[]};
+  // Use simple index split - overridden by splitByKm for OSRM routes
   const target=Math.floor(pts.length*fraction);
   return{done:pts.slice(0,target+1),ahead:pts.slice(target)};
+}
+
+// Split OSRM route by actual accumulated distance
+function splitRouteByKm(pts, targetKm, totalKm) {
+  if (!pts || pts.length < 2) return {done:[], ahead:pts||[]};
+  // Calculate total route length from coords
+  var totalDist = 0;
+  var dists = [0];
+  for (var i = 1; i < pts.length; i++) {
+    var a = pts[i-1], b = pts[i];
+    var dlat = (b[0]-a[0])*Math.PI/180;
+    var dlng = (b[1]-a[1])*Math.PI/180;
+    var aa = Math.sin(dlat/2)*Math.sin(dlat/2) +
+             Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*
+             Math.sin(dlng/2)*Math.sin(dlng/2);
+    totalDist += 6371*2*Math.atan2(Math.sqrt(aa),Math.sqrt(1-aa));
+    dists.push(totalDist);
+  }
+  // Find split point proportional to targetKm/totalKm of actual route length
+  var splitDist = (targetKm / totalKm) * totalDist;
+  var splitIdx = 0;
+  for (var j = 0; j < dists.length-1; j++) {
+    if (dists[j] <= splitDist) splitIdx = j; else break;
+  }
+  return {done: pts.slice(0, splitIdx+1), ahead: pts.slice(splitIdx)};
 }
 
 // Journal images
@@ -578,7 +604,7 @@ function nearestWpName(km){
     {km:377,name:'Calais'},{km:418,name:'Bethune'},{km:456,name:'Arras'},
     {km:500,name:'Amiens'},{km:553,name:'Compiegne'},{km:591,name:'Pontoise'},
     {km:609,name:'Paris'},{km:678,name:'Sens'},{km:723,name:'Auxerre'},
-    {km:823,name:'Dijon'},{km:963,name:'Alsace — Mulhouse'},{km:1001,name:'Breisach'},
+    {km:823,name:'Dijon'},{km:870,name:'Beaune, Burgundy'},{km:900,name:'Chalon-sur-Saone'},{km:930,name:'Macon, Burgundy'},{km:963,name:'Alsace — Mulhouse'},{km:1001,name:'Breisach'},
     {km:1087,name:'Reutlingen'},{km:1143,name:'Ulm'},{km:1197,name:'Gunzburg'},
     {km:1233,name:'Ingolstadt'},{km:1277,name:'Regensburg'},{km:1328,name:'Straubing'},
     {km:1347,name:'Deggendorf'},{km:1366,name:'Passau'},{km:1382,name:'Obernzell'},
@@ -670,8 +696,8 @@ async function init(){
     if (fullRouteLine) map.removeLayer(fullRouteLine);
     if (doneRouteLine) map.removeLayer(doneRouteLine);
 
-    var fraction = RIDDEN / TOTAL_KM;
-    var split = splitAtFraction(allCoords, fraction);
+    // Split by actual km distance along the real road geometry
+    var split = splitRouteByKm(allCoords, RIDDEN, TOTAL_KM);
     var rdone = split.done;
 
     fullRouteLine = L.polyline(allCoords, {color:'#2B7FD4', weight:2.5, opacity:0.45}).addTo(map);
@@ -857,23 +883,23 @@ function updatePanel(ridden) {
 
 // Fetch dynamic location photo from our serverless function
 async function fetchLocationPhoto(lat, lng, km) {
-  // Check localStorage cache first (keyed by rounded km to nearest 5)
   var cacheKey = 'lp_' + Math.round(km / 5) * 5;
+
+  // Always show nearest waypoint name immediately while photo loads
+  var lc = document.querySelector('.loc-cap-name');
+  if (lc) lc.textContent = nearestWpName(km);
+
+  // Check localStorage cache
   try {
     var cached = localStorage.getItem(cacheKey);
     if (cached) {
       var data = JSON.parse(cached);
-      if (data && data.photo) {
+      if (data && (data.photo || data.placeName)) {
         applyLocationPhoto(data);
         return;
       }
     }
   } catch(e) {}
-
-  // Show loading state
-  var li = document.querySelector('.loc-img img');
-  var lc = document.querySelector('.loc-cap-name');
-  if (lc) lc.textContent = 'Loading...';
 
   try {
     var res = await fetch(
@@ -882,14 +908,32 @@ async function fetchLocationPhoto(lat, lng, km) {
     );
     if (!res.ok) throw new Error('HTTP ' + res.status);
     var data = await res.json();
-
-    // Cache it
     try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch(e) {}
-
     applyLocationPhoto(data);
   } catch(err) {
     console.warn('Location photo fetch failed:', err.message);
-    if (lc) lc.textContent = 'On the road';
+    // Keep the waypoint name — don't show "On the road"
+    // Try a direct Unsplash fetch as fallback (no proxy needed for demo)
+    try {
+      var placeName = nearestWpName(km);
+      var uRes = await fetch(
+        'https://api.unsplash.com/photos/random?query=' +
+        encodeURIComponent(placeName + ' landscape travel') +
+        '&orientation=landscape&content_filter=high',
+        { headers: { 'Authorization': 'Client-ID ayeoZOU5dQiAM9QwfcNGyDdbiQ21Fz0bJjBZuOAOGac' } }
+      );
+      if (uRes.ok) {
+        var uData = await uRes.json();
+        var li2 = document.querySelector('.loc-img img');
+        if (li2 && uData.urls) {
+          li2.style.opacity = '0';
+          li2.src = uData.urls.regular;
+          li2.onload = function(){ li2.style.transition='opacity 0.6s'; li2.style.opacity='1'; };
+        }
+        var cr = document.getElementById('photo-credit');
+        if (cr && uData.user) cr.innerHTML = 'Photo: <a href="'+uData.user.links.html+'" target="_blank" style="color:rgba(255,255,255,0.7)">'+uData.user.name+'</a> / Unsplash';
+      }
+    } catch(e2) { console.warn('Direct Unsplash also failed:', e2.message); }
   }
 }
 
@@ -898,7 +942,7 @@ function applyLocationPhoto(data) {
   var lc = document.querySelector('.loc-cap-name');
   var credit = document.getElementById('photo-credit');
 
-  if (data.placeName && lc) lc.textContent = data.placeName;
+  if (lc) lc.textContent = data.placeName || nearestWpName(RIDDEN);
 
   if (data.photo && data.photo.url) {
     if (li) {
@@ -1008,7 +1052,10 @@ function showEntryPhoto(total, place, lat, lng, dateStr, km) {
 
   // Fetch dynamic location photo for current virtual position
   var vll = getVirtualLatLng(RIDDEN);
-  if (vll) fetchLocationPhoto(vll.lat, vll.lng, RIDDEN);
+  if (vll) {
+    console.log('Fetching photo for:', vll.lat, vll.lng, 'km:', RIDDEN);
+    fetchLocationPhoto(vll.lat, vll.lng, RIDDEN);
+  }
 
   init();
 })();
