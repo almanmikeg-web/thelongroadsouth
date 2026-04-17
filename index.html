@@ -860,13 +860,24 @@ async function init(){
 
     // Find the OSRM coord that corresponds to our current waypoint
     // by finding the closest point in allCoords to our virtual position
-    var vllYou = getVirtualLatLng(RIDDEN);
-    var bestIdx = 0, bestDist = Infinity;
-    for (var ci = 0; ci < allCoords.length; ci++) {
-      var dlat = allCoords[ci][0] - vllYou.lat;
-      var dlng = allCoords[ci][1] - vllYou.lng;
-      var d = dlat*dlat + dlng*dlng;
-      if (d < bestDist) { bestDist = d; bestIdx = ci; }
+    // Find split point by measuring actual road distance along OSRM coords
+    // This ensures dot and line split are at exactly the right road position
+    var totalRoadDist = 0;
+    var segDists = [0];
+    for (var ci = 1; ci < allCoords.length; ci++) {
+      var a = allCoords[ci-1], b = allCoords[ci];
+      var dlat2 = (b[0]-a[0])*Math.PI/180, dlng2 = (b[1]-a[1])*Math.PI/180;
+      var sinLat = Math.sin(dlat2/2), sinLng = Math.sin(dlng2/2);
+      var aa2 = sinLat*sinLat + Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*sinLng*sinLng;
+      totalRoadDist += 6371*2*Math.atan2(Math.sqrt(aa2),Math.sqrt(1-aa2));
+      segDists.push(totalRoadDist);
+    }
+    // Find index where accumulated road distance = RIDDEN km
+    // Scale RIDDEN to the actual road total (OSRM route may differ from TOTAL_KM)
+    var targetDist = (RIDDEN / TOTAL_KM) * totalRoadDist;
+    var bestIdx = 0;
+    for (var ci = 0; ci < segDists.length-1; ci++) {
+      if (segDists[ci] <= targetDist) bestIdx = ci; else break;
     }
 
     // Draw: ridden = red up to bestIdx, ahead = blue from bestIdx
@@ -876,7 +887,9 @@ async function init(){
     doneRouteLine = L.polyline(rdone,  {color:'#E8340A', weight:3.5, opacity:0.92}).addTo(map);
     fullRouteLine = L.polyline(rahead, {color:'#2B7FD4', weight:2.5, opacity:0.45}).addTo(map);
 
-    addYouMarker(vllYou.lat, vllYou.lng);
+    // Snap dot to actual road line
+    var snapPt = allCoords[bestIdx];
+    addYouMarker(snapPt[0], snapPt[1]);
     statusEl.classList.add('done');
 
   } catch(err) {
