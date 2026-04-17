@@ -144,8 +144,8 @@
     /* ── MAP MARKERS ── */
     .you-dot{width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid white;box-shadow:0 0 0 3px rgba(232,52,10,0.25),0 2px 8px rgba(232,52,10,0.4);animation:pulse 2.5s ease-in-out infinite}
     @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(232,52,10,0.25),0 2px 8px rgba(232,52,10,0.4)}50%{box-shadow:0 0 0 7px rgba(232,52,10,0.1),0 2px 12px rgba(232,52,10,0.5)}}
-    .m-milestone{width:12px;height:12px;transform:rotate(45deg);background:var(--gold);border:2px solid white;cursor:pointer;transition:transform 0.15s;box-shadow:0 2px 4px rgba(0,0,0,0.2)}
-    .m-milestone:hover{transform:rotate(45deg) scale(1.5)}
+    .m-milestone{width:8px;height:8px;transform:rotate(45deg);background:var(--gold);border:1.5px solid white;cursor:pointer;transition:transform 0.15s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+    .m-milestone:hover{transform:rotate(45deg) scale(1.8)}
     .m-milestone.ahead{background:#CCC;opacity:0.5}
     .m-month{width:11px;height:11px;border-radius:50%;background:var(--gold);border:2px solid white;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
     .m-week{width:8px;height:8px;border-radius:50%;background:#5BA4CF;border:1.5px solid white;cursor:pointer}
@@ -198,14 +198,7 @@
 
 <div class="route-status" id="route-status">Fetching road geometry...</div>
 
-<div class="legend">
-  <div class="leg-row"><div class="leg-line" style="background:#E8340A"></div>Ridden</div>
-  <div class="leg-row"><div class="leg-line" style="background:#2B7FD4;opacity:0.6"></div>Ahead</div>
-  <div class="leg-row"><div class="leg-diamond"></div>Milestone</div>
-  <div class="leg-row"><div class="leg-circle" style="background:var(--gold2)"></div>Monthly</div>
-  <div class="leg-row"><div class="leg-circle" style="background:var(--teal)"></div>Weekly</div>
-  <div class="leg-row"><div class="leg-small" style="background:var(--accent)"></div>Ride</div>
-</div>
+
 
 <button class="ptoggle" id="ptoggle" onclick="togglePanel()">JOURNAL</button>
 
@@ -449,27 +442,27 @@ let RIDES  = []; // loaded from rides.json
 // ═══════════════════════════════════════
 const MILESTONES = [
   // ── ENGLAND ──
-  {lat:53.1935,lng:-2.8928, km:51,   name:'Chester',               icon:'🏰', desc:'Roman walls and medieval cathedral. England begins to narrow southward.'},
-  {lat:51.7520,lng:-1.2580, km:191,  name:'Oxford',                icon:'🎓', desc:'City of dreaming spires. Halfway to London.'},
-  {lat:51.4900,lng:-0.1200, km:302,  name:'London',                icon:'🎡', desc:'Capital city. The Thames. More than a quarter of England behind you.'},
-  {lat:51.2800,lng:1.0800,  km:423,  name:'Canterbury',            icon:'⛪', desc:'The great cathedral. Pilgrims have walked this road for a thousand years.'},
-  {lat:51.1295,lng:1.3089,  km:483,  name:'White Cliffs of Dover', icon:'🪨', desc:'The southern edge of England. France visible on a clear day.'},
+  {lat:53.1935,lng:-2.8928, km:55,   name:'Chester',               icon:'🏰', desc:'Roman walls and medieval cathedral. England begins to narrow southward.'},
+  {lat:51.7520,lng:-1.2580, km:205,  name:'Oxford',                icon:'🎓', desc:'City of dreaming spires. Halfway to London.'},
+  {lat:51.4900,lng:-0.1200, km:325,  name:'London',                icon:'🎡', desc:'Capital city. The Thames. More than a quarter of England behind you.'},
+  {lat:51.2800,lng:1.0800,  km:455,  name:'Canterbury',            icon:'⛪', desc:'The great cathedral. Pilgrims have walked this road for a thousand years.'},
+  {lat:51.1295,lng:1.3089,  km:520,  name:'White Cliffs of Dover', icon:'🪨', desc:'The southern edge of England. France visible on a clear day.'},
 
   // ── FRANCE — NORTH ──
-  {lat:50.9513,lng:1.8587,  km:502,  name:'Calais',                icon:'⚓', desc:'First step on the continent. The Channel crossed.'},
-  {lat:50.2900,lng:2.7800,  km:567,  name:'Arras',                 icon:'🌻', desc:'Flanders fields. The Great War battlefields stretch across this landscape.'},
-  {lat:49.8940,lng:2.2960,  km:632,  name:'Amiens',                icon:'🏛️', desc:'Gothic cathedral, the tallest in France. EuroVelo 3 follows the Somme valley south.'},
-  {lat:49.4000,lng:2.8300,  km:514,  name:'Compiègne',             icon:'🌲', desc:'Royal forest. The Armistice was signed here in 1918.'},
-  {lat:48.8566,lng:2.3522,  km:809,  name:'Paris',                 icon:'🗼', desc:'The Eiffel Tower. Notre Dame. 870 km from Liverpool by road.'},
+  {lat:50.9513,lng:1.8587,  km:540,  name:'Calais',                icon:'⚓', desc:'First step on the continent. The Channel crossed.'},
+  {lat:50.2900,lng:2.7800,  km:610,  name:'Arras',                 icon:'🌻', desc:'Flanders fields. The Great War battlefields stretch across this landscape.'},
+  {lat:49.8940,lng:2.2960,  km:680,  name:'Amiens',                icon:'🏛️', desc:'Gothic cathedral, the tallest in France. EuroVelo 3 follows the Somme valley south.'},
+  {lat:49.4000,lng:2.8300,  km:743,  name:'Compiègne',             icon:'🌲', desc:'Royal forest. The Armistice was signed here in 1918.'},
+  {lat:48.8566,lng:2.3522,  km:870,  name:'Paris',                 icon:'🗼', desc:'The Eiffel Tower. Notre Dame by road.'},
 
   // ── FRANCE — SOUTH ──
   {lat:47.9000,lng:3.5800,  km:948, name:'Auxerre',               icon:'🍷', desc:'Burgundy begins. Vineyards replace the flat northern plains.'},
-  {lat:47.3220,lng:5.0415,  km:1050, name:'Dijon',                 icon:'🥗', desc:'Mustard capital of the world. The Route des Grands Crus lies just south.'},
-  {lat:47.7400,lng:7.3100,  km:1208, name:'Mulhouse — Alsace',     icon:'🍺', desc:'The Rhine valley. Alsace with its half-timbered villages and white wines.'},
+  {lat:47.3220,lng:5.0415,  km:1130, name:'Dijon',                 icon:'🥗', desc:'Mustard capital of the world. The Route des Grands Crus lies just south.'},
+  {lat:47.7400,lng:7.3100,  km:1300, name:'Mulhouse — Alsace',     icon:'🍺', desc:'The Rhine valley. Alsace with its half-timbered villages and white wines.'},
 
   // ── GERMANY / DANUBE ──
-  {lat:47.9800,lng:7.8500,  km:1285, name:'Breisach — Rhine',      icon:'🏔️', desc:'Crossing the Rhine into Germany. The Black Forest rises to the east.'},
-  {lat:48.3974,lng:9.9919,  km:1441, name:'Ulm',                   icon:'⛪', desc:'The world\'s tallest church spire. The Danube begins here — follow it all the way to Budapest.'},
+  {lat:47.9800,lng:7.8500,  km:1383, name:'Breisach — Rhine',      icon:'🏔️', desc:'Crossing the Rhine into Germany. The Black Forest rises to the east.'},
+  {lat:48.3974,lng:9.9919,  km:1550, name:'Ulm',                   icon:'⛪', desc:'The world\'s tallest church spire. The Danube begins here — follow it all the way to Budapest.'},
   {lat:48.9900,lng:12.1000, km:1557, name:'Regensburg',            icon:'🏛️', desc:'UNESCO old town. The oldest city on the Danube. Stone bridge built in 1135.'},
   {lat:48.5734,lng:13.4508, km:1673, name:'Passau — Three Rivers', icon:'🌊', desc:'The Inn, the Ilz and the Danube meet here. Austria begins just downstream.'},
 
@@ -925,7 +918,7 @@ function addMilestones(){
     var done = m.km <= RIDDEN;
     var el = document.createElement('div');
     el.className = 'm-milestone' + (done ? '' : ' ahead');
-    var icon = L.divIcon({html:el, className:'', iconSize:[12,12], iconAnchor:[6,6]});
+    var icon = L.divIcon({html:el, className:'', iconSize:[8,8], iconAnchor:[4,4]});
     var statusHtml = done
       ? '<div class="p-pass">\u2713 Passed at ' + m.km.toLocaleString() + ' km</div>'
       : '<div class="p-ahead">' + (m.km-RIDDEN).toLocaleString() + ' km ahead</div>';
