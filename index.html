@@ -172,7 +172,7 @@
 <div class="intro" id="intro">
   <div class="i-title">The Long Road South</div>
   <div class="i-line"></div>
-  <div class="i-sub">Liverpool → Val de Vie, Paarl · 15,600 km</div>
+  <div class="i-sub">Liverpool → Val de Vie, Paarl · 16,500 km</div>
   <div class="i-km" id="i-km">Loading...</div>
   <div class="i-status" id="intro-status">Plotting the route...</div>
 </div>
@@ -180,7 +180,7 @@
 <header>
   <div>
     <div class="logo-wrap"><div class="logo-title">The Long <span>Road South</span></div></div>
-    <div class="logo-sub">Liverpool → Val de Vie, Paarl · 15,600 km</div>
+    <div class="logo-sub">Liverpool → Val de Vie, Paarl · 16,500 km</div>
   </div>
   <nav>
     <button class="nav-btn active">Map</button>
@@ -221,7 +221,7 @@
       <div class="prog-labels"><span>Liverpool</span><span>5.2%</span><span>Val de Vie</span></div>
       <div class="km-row">
         <div class="km-stat"><div class="km-val">612</div><div class="km-lbl">km ridden</div></div>
-        <div class="km-stat"><div class="km-val">11,238</div><div class="km-lbl">km to go</div></div>
+        <div class="km-stat"><div class="km-val" id="km-to-go">—</div><div class="km-lbl">km to go</div></div>
         <div class="km-stat"><div class="km-val">2030</div><div class="km-lbl">est. finish</div></div>
       </div>
     </div>
@@ -418,11 +418,11 @@ const WAYPOINTS = [
   {lat:-33.791944,lng:18.970111}, // Val de Vie ★ FINISH
 ];
 
-const TOTAL_KM = 15600;
+const TOTAL_KM = 16500;
 let RIDDEN = 0;
 
 // Pre-computed cumulative km for each waypoint (haversine-scaled to TOTAL_KM)
-var WP_KM = [0,32,65,98,130,162,195,227,260,292,325,325,390,455,520,570,620,670,720,770,820,870,957,1043,1130,1197,1264,1331,1398,1465,1532,1599,1666,1733,1800,1818,1836,1854,1872,1890,1908,1926,1944,1962,1980,2034,2088,2142,2196,2250,2425,2600,2675,2750,2825,2900,3150,3400,3600,3800,3989,4178,4367,4556,4744,4933,5122,5311,5500,5783,6067,6350,6633,6917,7200,7450,7700,7950,8200,8450,8700,8950,9200,9455,9709,9964,10218,10473,10727,10982,11236,11491,11745,12000,12250,12500,12833,13167,13500,13833,14167,14500,14833,15167,15500,15520,15540,15560,15580,15600];
+var WP_KM = [0,30,59,89,118,148,177,207,236,266,295,325,390,455,520,570,620,670,720,770,820,870,957,1043,1130,1300,1356,1411,1467,1522,1578,1633,1689,1744,1800,1823,1847,1870,1887,1903,1920,1935,1950,1965,1980,2034,2088,2142,2196,2250,2425,2600,2675,2750,2825,2900,3150,3400,3600,3800,4033,4267,4500,4733,4967,5200,5433,5667,5900,6167,6433,6700,6967,7233,7500,7750,8000,8250,8500,8750,9000,9250,9500,9773,10045,10318,10591,10864,11136,11409,11682,11955,12227,12500,12750,13000,13344,13689,14033,14378,14722,15067,15411,15756,16100,16112,16124,16136,16148,16160];
 
 // Interpolate exact lat/lng using actual km distances between waypoints
 function getVirtualLatLng(km) {
@@ -449,89 +449,89 @@ let RIDES  = []; // loaded from rides.json
 // ═══════════════════════════════════════
 const MILESTONES = [
   // ── ENGLAND ──
-  {lat:53.1935,lng:-2.8928, km:55,   name:'Chester',               icon:'🏰', desc:'Roman walls and medieval cathedral. England begins to narrow southward.'},
-  {lat:51.7520,lng:-1.2580, km:205,  name:'Oxford',                icon:'🎓', desc:'City of dreaming spires. Halfway to London.'},
-  {lat:51.4900,lng:-0.1200, km:325,  name:'London',                icon:'🎡', desc:'Capital city. The Thames. More than a quarter of England behind you.'},
-  {lat:51.2800,lng:1.0800,  km:455,  name:'Canterbury',            icon:'⛪', desc:'The great cathedral. Pilgrims have walked this road for a thousand years.'},
-  {lat:51.1295,lng:1.3089,  km:520,  name:'White Cliffs of Dover', icon:'🪨', desc:'The southern edge of England. France visible on a clear day.'},
+  {lat:53.1935,lng:-2.8928, km:51,   name:'Chester',               icon:'🏰', desc:'Roman walls and medieval cathedral. England begins to narrow southward.'},
+  {lat:51.7520,lng:-1.2580, km:191,  name:'Oxford',                icon:'🎓', desc:'City of dreaming spires. Halfway to London.'},
+  {lat:51.4900,lng:-0.1200, km:302,  name:'London',                icon:'🎡', desc:'Capital city. The Thames. More than a quarter of England behind you.'},
+  {lat:51.2800,lng:1.0800,  km:423,  name:'Canterbury',            icon:'⛪', desc:'The great cathedral. Pilgrims have walked this road for a thousand years.'},
+  {lat:51.1295,lng:1.3089,  km:483,  name:'White Cliffs of Dover', icon:'🪨', desc:'The southern edge of England. France visible on a clear day.'},
 
   // ── FRANCE — NORTH ──
-  {lat:50.9513,lng:1.8587,  km:540,  name:'Calais',                icon:'⚓', desc:'First step on the continent. The Channel crossed.'},
-  {lat:50.2900,lng:2.7800,  km:610,  name:'Arras',                 icon:'🌻', desc:'Flanders fields. The Great War battlefields stretch across this landscape.'},
-  {lat:49.8940,lng:2.2960,  km:680,  name:'Amiens',                icon:'🏛️', desc:'Gothic cathedral, the tallest in France. EuroVelo 3 follows the Somme valley south.'},
-  {lat:49.4000,lng:2.8300,  km:553,  name:'Compiègne',             icon:'🌲', desc:'Royal forest. The Armistice was signed here in 1918.'},
-  {lat:48.8566,lng:2.3522,  km:870,  name:'Paris',                 icon:'🗼', desc:'The Eiffel Tower. Notre Dame. 609 km from your front door in Liverpool.'},
+  {lat:50.9513,lng:1.8587,  km:502,  name:'Calais',                icon:'⚓', desc:'First step on the continent. The Channel crossed.'},
+  {lat:50.2900,lng:2.7800,  km:567,  name:'Arras',                 icon:'🌻', desc:'Flanders fields. The Great War battlefields stretch across this landscape.'},
+  {lat:49.8940,lng:2.2960,  km:632,  name:'Amiens',                icon:'🏛️', desc:'Gothic cathedral, the tallest in France. EuroVelo 3 follows the Somme valley south.'},
+  {lat:49.4000,lng:2.8300,  km:514,  name:'Compiègne',             icon:'🌲', desc:'Royal forest. The Armistice was signed here in 1918.'},
+  {lat:48.8566,lng:2.3522,  km:809,  name:'Paris',                 icon:'🗼', desc:'The Eiffel Tower. Notre Dame. 870 km from Liverpool by road.'},
 
   // ── FRANCE — SOUTH ──
-  {lat:47.9000,lng:3.5800,  km:1020, name:'Auxerre',               icon:'🍷', desc:'Burgundy begins. Vineyards replace the flat northern plains.'},
-  {lat:47.3220,lng:5.0415,  km:1130, name:'Dijon',                 icon:'🥗', desc:'Mustard capital of the world. The Route des Grands Crus lies just south.'},
-  {lat:47.7400,lng:7.3100,  km:1300, name:'Mulhouse — Alsace',     icon:'🍺', desc:'The Rhine valley. Alsace with its half-timbered villages and white wines.'},
+  {lat:47.9000,lng:3.5800,  km:948, name:'Auxerre',               icon:'🍷', desc:'Burgundy begins. Vineyards replace the flat northern plains.'},
+  {lat:47.3220,lng:5.0415,  km:1050, name:'Dijon',                 icon:'🥗', desc:'Mustard capital of the world. The Route des Grands Crus lies just south.'},
+  {lat:47.7400,lng:7.3100,  km:1208, name:'Mulhouse — Alsace',     icon:'🍺', desc:'The Rhine valley. Alsace with its half-timbered villages and white wines.'},
 
   // ── GERMANY / DANUBE ──
-  {lat:47.9800,lng:7.8500,  km:1383, name:'Breisach — Rhine',      icon:'🏔️', desc:'Crossing the Rhine into Germany. The Black Forest rises to the east.'},
-  {lat:48.3974,lng:9.9919,  km:1550, name:'Ulm',                   icon:'⛪', desc:'The world\'s tallest church spire. The Danube begins here — follow it all the way to Budapest.'},
-  {lat:48.9900,lng:12.1000, km:1675, name:'Regensburg',            icon:'🏛️', desc:'UNESCO old town. The oldest city on the Danube. Stone bridge built in 1135.'},
-  {lat:48.5734,lng:13.4508, km:1800, name:'Passau — Three Rivers', icon:'🌊', desc:'The Inn, the Ilz and the Danube meet here. Austria begins just downstream.'},
+  {lat:47.9800,lng:7.8500,  km:1285, name:'Breisach — Rhine',      icon:'🏔️', desc:'Crossing the Rhine into Germany. The Black Forest rises to the east.'},
+  {lat:48.3974,lng:9.9919,  km:1441, name:'Ulm',                   icon:'⛪', desc:'The world\'s tallest church spire. The Danube begins here — follow it all the way to Budapest.'},
+  {lat:48.9900,lng:12.1000, km:1557, name:'Regensburg',            icon:'🏛️', desc:'UNESCO old town. The oldest city on the Danube. Stone bridge built in 1135.'},
+  {lat:48.5734,lng:13.4508, km:1673, name:'Passau — Three Rivers', icon:'🌊', desc:'The Inn, the Ilz and the Danube meet here. Austria begins just downstream.'},
 
   // ── AUSTRIA — DANUBE CYCLE PATH ──
-  {lat:48.2912,lng:14.2900, km:1870, name:'Linz',                  icon:'🎨', desc:'Upper Austrian capital. Anton Bruckner\'s city. European Capital of Culture 2009.'},
-  {lat:48.2300,lng:15.1000, km:1920, name:'Melk Abbey',            icon:'🏰', desc:'Baroque masterpiece on a cliff above the Danube. The Wachau begins.'},
-  {lat:48.3900,lng:15.5400, km:1932, name:'Dürnstein — Wachau',    icon:'🍇', desc:'UNESCO World Heritage landscape. Vineyards, apricot orchards, castle ruins. Richard the Lionheart was imprisoned here.'},
-  {lat:48.4100,lng:15.6100, km:1944, name:'Krems',                 icon:'🍷', desc:'Wine capital of the Wachau. The valley opens out toward Vienna.'},
-  {lat:48.2082,lng:16.3738, km:1980, name:'Vienna',                icon:'🎻', desc:'Imperial city. Schönbrunn Palace, the Opera, the Ringstrasse. One of the great capitals of Europe.'},
+  {lat:48.2912,lng:14.2900, km:1738, name:'Linz',                  icon:'🎨', desc:'Upper Austrian capital. Anton Bruckner\'s city. European Capital of Culture 2009.'},
+  {lat:48.2300,lng:15.1000, km:1785, name:'Melk Abbey',            icon:'🏰', desc:'Baroque masterpiece on a cliff above the Danube. The Wachau begins.'},
+  {lat:48.3900,lng:15.5400, km:1796, name:'Dürnstein — Wachau',    icon:'🍇', desc:'UNESCO World Heritage landscape. Vineyards, apricot orchards, castle ruins. Richard the Lionheart was imprisoned here.'},
+  {lat:48.4100,lng:15.6100, km:1807, name:'Krems',                 icon:'🍷', desc:'Wine capital of the Wachau. The valley opens out toward Vienna.'},
+  {lat:48.2082,lng:16.3738, km:1840, name:'Vienna',                icon:'🎻', desc:'Imperial city. Schönbrunn Palace, the Opera, the Ringstrasse. One of the great capitals of Europe.'},
 
   // ── HUNGARY ──
-  {lat:47.7800,lng:18.7400, km:2142, name:'Esztergom',             icon:'⛪', desc:'Hungary\'s largest basilica. The dramatic Danube Bend begins.'},
-  {lat:47.4979,lng:19.0402, km:2250, name:'Budapest',              icon:'🛁', desc:'The Pearl of the Danube. Thermal baths, the Chain Bridge, Parliament at night.'},
+  {lat:47.7800,lng:18.7400, km:1991, name:'Esztergom',             icon:'⛪', desc:'Hungary\'s largest basilica. The dramatic Danube Bend begins.'},
+  {lat:47.4979,lng:19.0402, km:2091, name:'Budapest',              icon:'🛁', desc:'The Pearl of the Danube. Thermal baths, the Chain Bridge, Parliament at night.'},
 
   // ── SERBIA ──
-  {lat:45.2671,lng:19.8335, km:2425, name:'Novi Sad',              icon:'🎵', desc:'Serbia\'s second city. EXIT Festival. The Petrovaradin fortress looms over the river.'},
-  {lat:44.8176,lng:20.4569, km:2600, name:'Belgrade',              icon:'🏙️', desc:'Where the Sava meets the Danube. Kalemegdan fortress. The Balkans begin in earnest.'},
-  {lat:44.2100,lng:22.1000, km:2750, name:'Iron Gates Gorge',      icon:'🏔️', desc:'The Danube forces its way through the Carpathian mountains. One of Europe\'s most dramatic landscapes.'},
+  {lat:45.2671,lng:19.8335, km:2254, name:'Novi Sad',              icon:'🎵', desc:'Serbia\'s second city. EXIT Festival. The Petrovaradin fortress looms over the river.'},
+  {lat:44.8176,lng:20.4569, km:2417, name:'Belgrade',              icon:'🏙️', desc:'Where the Sava meets the Danube. Kalemegdan fortress. The Balkans begin in earnest.'},
+  {lat:44.2100,lng:22.1000, km:2556, name:'Iron Gates Gorge',      icon:'🏔️', desc:'The Danube forces its way through the Carpathian mountains. One of Europe\'s most dramatic landscapes.'},
 
   // ── BULGARIA / TURKEY ──
-  {lat:42.6977,lng:23.3219, km:2900, name:'Sofia',                 icon:'🏛️', desc:'Bulgaria\'s capital. Alexander Nevsky Cathedral. The Balkans at their most atmospheric.'},
-  {lat:41.6818,lng:26.5597, km:3150, name:'Edirne',                icon:'🕌', desc:'Ottoman masterpiece. The Selimiye Mosque. The last city before Istanbul.'},
-  {lat:41.0082,lng:28.9784, km:3400, name:'Istanbul',              icon:'🕌', desc:'Where Europe becomes Asia. Hagia Sophia, the Bosphorus, the Grand Bazaar. Halfway across Turkey.'},
-  {lat:40.1553,lng:32.6500, km:3800, name:'Ankara',                icon:'🇹🇷', desc:'Turkish capital. Heart of Anatolia. The landscape turns drier and more ancient.'},
-  {lat:37.0662,lng:37.3833, km:4225, name:'Gaziantep',             icon:'🥜', desc:'Pistachio capital of the world. The Syrian border approaches. The Middle East begins.'},
+  {lat:42.6977,lng:23.3219, km:2696, name:'Sofia',                 icon:'🏛️', desc:'Bulgaria\'s capital. Alexander Nevsky Cathedral. The Balkans at their most atmospheric.'},
+  {lat:41.6818,lng:26.5597, km:2928, name:'Edirne',                icon:'🕌', desc:'Ottoman masterpiece. The Selimiye Mosque. The last city before Istanbul.'},
+  {lat:41.0082,lng:28.9784, km:3160, name:'Istanbul',              icon:'🕌', desc:'Where Europe becomes Asia. Hagia Sophia, the Bosphorus, the Grand Bazaar. Halfway across Turkey.'},
+  {lat:40.1553,lng:32.6500, km:3532, name:'Ankara',                icon:'🇹🇷', desc:'Turkish capital. Heart of Anatolia. The landscape turns drier and more ancient.'},
+  {lat:37.0662,lng:37.3833, km:3927, name:'Gaziantep',             icon:'🥜', desc:'Pistachio capital of the world. The Syrian border approaches. The Middle East begins.'},
 
   // ── JORDAN / MIDDLE EAST ──
-  {lat:31.9454,lng:35.9284, km:5075, name:'Amman',                 icon:'🏺', desc:'Jordan\'s capital built on seven hills. Ancient Roman theatre. Petra is not far south.'},
-  {lat:29.5267,lng:35.0060, km:5288, name:'Aqaba',                 icon:'🌊', desc:'Red Sea. Africa visible across the water. The ferry to Egypt departs from here.'},
+  {lat:31.9454,lng:35.9284, km:4717, name:'Amman',                 icon:'🏺', desc:'Jordan\'s capital built on seven hills. Ancient Roman theatre. Petra is not far south.'},
+  {lat:29.5267,lng:35.0060, km:4915, name:'Aqaba',                 icon:'🌊', desc:'Red Sea. Africa visible across the water. The ferry to Egypt departs from here.'},
 
   // ── EGYPT ──
-  {lat:30.0444,lng:31.2357, km:5500, name:'Cairo — Pyramids',      icon:'🔺', desc:'The Great Pyramids of Giza. The Sphinx. 4,500 years of history. Africa truly begins.'},
-  {lat:25.6872,lng:32.6396, km:5986, name:'Luxor — Valley of Kings',icon:'🔱',desc:'Temple of Karnak. Valley of the Kings. The greatest open-air museum in the world.'},
-  {lat:24.0889,lng:32.8998, km:6229, name:'Aswan',                 icon:'⚓', desc:'The Nile narrows. Feluccas on the water. Sudan is just downstream.'},
+  {lat:30.0444,lng:31.2357, km:5112, name:'Cairo — Pyramids',      icon:'🔺', desc:'The Great Pyramids of Giza. The Sphinx. 4,500 years of history. Africa truly begins.'},
+  {lat:25.6872,lng:32.6396, km:5564, name:'Luxor — Valley of Kings',icon:'🔱',desc:'Temple of Karnak. Valley of the Kings. The greatest open-air museum in the world.'},
+  {lat:24.0889,lng:32.8998, km:5790, name:'Aswan',                 icon:'⚓', desc:'The Nile narrows. Feluccas on the water. Sudan is just downstream.'},
 
   // ── SUDAN ──
-  {lat:21.7547,lng:31.3526, km:6471, name:'Wadi Halfa',            icon:'🏜️', desc:'The Sudanese border. Lake Nasser behind you. The Nubian Desert ahead.'},
-  {lat:15.5007,lng:32.5599, km:6957, name:'Khartoum — Two Niles',  icon:'🌊', desc:'The Blue and White Nile meet here. Sudan\'s capital. Over halfway to Val de Vie.'},
+  {lat:21.7547,lng:31.3526, km:6015, name:'Wadi Halfa',            icon:'🏜️', desc:'The Sudanese border. Lake Nasser behind you. The Nubian Desert ahead.'},
+  {lat:15.5007,lng:32.5599, km:6466, name:'Khartoum — Two Niles',  icon:'🌊', desc:'The Blue and White Nile meet here. Sudan\'s capital. Over halfway to Val de Vie.'},
 
   // ── ETHIOPIA ──
-  {lat:12.3646,lng:37.3922, km:7200, name:'Lake Tana',             icon:'🚣', desc:'Source of the Blue Nile. Ancient island monasteries. The Ethiopian Highlands rise ahead.'},
-  {lat:9.0320,lng:38.7469,  km:7533, name:'Addis Ababa',           icon:'☕', desc:'Africa\'s highest capital. Coffee was born here. The roof of Africa.'},
+  {lat:12.3646,lng:37.3922, km:6692, name:'Lake Tana',             icon:'🚣', desc:'Source of the Blue Nile. Ancient island monasteries. The Ethiopian Highlands rise ahead.'},
+  {lat:9.0320,lng:38.7469,  km:7002, name:'Addis Ababa',           icon:'☕', desc:'Africa\'s highest capital. Coffee was born here. The roof of Africa.'},
 
   // ── KENYA ──
-  {lat:0.0000,lng:37.0000,  km:8750, name:'Equator Crossing',      icon:'🌍', desc:'Zero degrees latitude. The northern hemisphere is behind you. Halfway between the poles.'},
-  {lat:-1.2921,lng:36.8219, km:8867, name:'Nairobi',               icon:'🦁', desc:'Safari capital. Nairobi National Park — lions with skyscrapers in the background.'},
+  {lat:0.0000,lng:37.0000,  km:8133, name:'Equator Crossing',      icon:'🌍', desc:'Zero degrees latitude. The northern hemisphere is behind you. Halfway between the poles.'},
+  {lat:-1.2921,lng:36.8219, km:8242, name:'Nairobi',               icon:'🦁', desc:'Safari capital. Nairobi National Park — lions with skyscrapers in the background.'},
 
   // ── TANZANIA ──
-  {lat:-3.3869,lng:36.6830, km:9200, name:'Arusha — Kilimanjaro',  icon:'🏔️', desc:'Kilimanjaro visible on a clear day. The Serengeti begins here. Africa at its most epic.'},
-  {lat:-6.7924,lng:39.2083, km:10133,name:'Dar es Salaam',         icon:'⚓', desc:'Tanzania\'s largest city. Indian Ocean port. Zanzibar is just offshore.'},
+  {lat:-3.3869,lng:36.6830, km:8551, name:'Arusha — Kilimanjaro',  icon:'🏔️', desc:'Kilimanjaro visible on a clear day. The Serengeti begins here. Africa at its most epic.'},
+  {lat:-6.7924,lng:39.2083, km:9418,name:'Dar es Salaam',         icon:'⚓', desc:'Tanzania\'s largest city. Indian Ocean port. Zanzibar is just offshore.'},
 
   // ── ZAMBIA ──
-  {lat:-15.417,lng:28.2833, km:11533,name:'Lusaka',                icon:'🌅', desc:'Zambia\'s capital. Southern Africa. The end is beginning to feel possible.'},
+  {lat:-15.417,lng:28.2833, km:10720,name:'Lusaka',                icon:'🌅', desc:'Zambia\'s capital. Southern Africa. The end is beginning to feel possible.'},
 
   // ── ZIMBABWE ──
-  {lat:-17.924,lng:25.8572, km:12250,name:'Victoria Falls',        icon:'💦', desc:'Mosi-oa-Tunya — the smoke that thunders. One of the seven natural wonders of the world.'},
+  {lat:-17.924,lng:25.8572, km:11386,name:'Victoria Falls',        icon:'💦', desc:'Mosi-oa-Tunya — the smoke that thunders. One of the seven natural wonders of the world.'},
 
   // ── BOTSWANA / SOUTH AFRICA ──
-  {lat:-24.654,lng:25.9087, km:13357,name:'Gaborone',              icon:'🌍', desc:'Botswana\'s capital. The Kalahari to the west. South Africa just ahead.'},
-  {lat:-28.448,lng:21.2561, km:14214,name:'Upington',              icon:'🍊', desc:'Orange River. Northern Cape. The last desert before the Cape.'},
-  {lat:-33.925,lng:18.4241, km:15500,name:'Cape Town — Table Mountain',icon:'🏔️',desc:'Table Mountain. The Mother City. The Atlantic and Indian Oceans meet just south of here.'},
-  {lat:-33.791944,lng:18.970111,km:15600,name:'Val de Vie — FINISH!',icon:'🏁',desc:'Home. 15,600 km. Liverpool to your doorstep. Done.'},
+  {lat:-24.654,lng:25.9087, km:12415,name:'Gaborone',              icon:'🌍', desc:'Botswana\'s capital. The Kalahari to the west. South Africa just ahead.'},
+  {lat:-28.448,lng:21.2561, km:13212,name:'Upington',              icon:'🍊', desc:'Orange River. Northern Cape. The last desert before the Cape.'},
+  {lat:-33.925,lng:18.4241, km:14407,name:'Cape Town — Table Mountain',icon:'🏔️',desc:'Table Mountain. The Mother City. The Atlantic and Indian Oceans meet just south of here.'},
+  {lat:-33.791944,lng:18.970111,km:13478,name:'Val de Vie — FINISH!',icon:'🏁',desc:'Home. 16,500 km. Liverpool to your doorstep. Done.'},
 ];
 
 // ═══════════════════════════════════════
@@ -737,7 +737,7 @@ const JIMG={
   9260: {url:'https://images.unsplash.com/photo-1543946602-a0fce8117697?w=700&q=85',   cap:'Victoria Falls, Zimbabwe'},
   10750:{url:'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=700&q=85',   cap:'Upington, Northern Cape'},
   11500:{url:'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=700&q=85', cap:'Cape Town — Table Mountain'},
-  15600:{url:'https://images.unsplash.com/photo-1607268490963-b7873e8cb6b0?w=700&q=85', cap:'Val de Vie, Paarl — home'},
+  14500:{url:'https://images.unsplash.com/photo-1607268490963-b7873e8cb6b0?w=700&q=85', cap:'Val de Vie, Paarl — home'},
 };
 function getImg(km){
   const keys=Object.keys(JIMG).map(Number).sort((a,b)=>a-b);
@@ -748,40 +748,40 @@ function getImg(km){
 
 function nearestWpName(km){
   const NAMES=[
-    {km:0,name:'Liverpool'},{km:28,name:'Warrington'},{km:55,name:'Chester'},
-    {km:85,name:'Whitchurch'},{km:115,name:'Telford'},{km:145,name:'Stourbridge'},
-    {km:175,name:'Stratford-upon-Avon'},{km:205,name:'Oxford'},{km:235,name:'Abingdon'},
-    {km:265,name:'Reading'},{km:295,name:'Twickenham'},{km:325,name:'London'},
-    {km:390,name:'Maidstone'},{km:455,name:'Canterbury'},{km:520,name:'Dover'},
-    {km:540,name:'Calais'},{km:575,name:'Bethune'},{km:610,name:'Arras'},
-    {km:680,name:'Amiens'},{km:743,name:'Compiegne'},{km:807,name:'Pontoise'},
-    {km:870,name:'Paris'},{km:960,name:'Sens'},{km:1020,name:'Auxerre'},
-    {km:1130,name:'Dijon'},{km:1215,name:'Beaune, Burgundy'},{km:1260,name:'Chalon-sur-Saone'},
-    {km:1300,name:'Alsace — Mulhouse'},{km:1383,name:'Breisach'},
-    {km:1467,name:'Reutlingen'},{km:1550,name:'Ulm'},{km:1592,name:'Gunzburg'},
-    {km:1633,name:'Ingolstadt'},{km:1675,name:'Regensburg'},{km:1717,name:'Straubing'},
-    {km:1758,name:'Deggendorf'},{km:1800,name:'Passau'},{km:1823,name:'Obernzell'},
-    {km:1847,name:'Aschach an der Donau'},{km:1870,name:'Linz'},
-    {km:1887,name:'Mauthausen'},{km:1903,name:'Grein'},{km:1920,name:'Melk'},
-    {km:1932,name:'Durnstein — Wachau'},{km:1944,name:'Krems'},{km:1968,name:'Tulln'},
-    {km:1980,name:'Vienna'},{km:2034,name:'Bratislava'},{km:2088,name:'Gyor'},
-    {km:2142,name:'Esztergom'},{km:2196,name:'Szentendre'},{km:2250,name:'Budapest'},
-    {km:2425,name:'Novi Sad'},{km:2600,name:'Belgrade'},{km:2675,name:'Smederevo'},
-    {km:2750,name:'Golubac — Iron Gates'},{km:2825,name:'Nis'},{km:2900,name:'Sofia'},
-    {km:3150,name:'Edirne'},{km:3400,name:'Istanbul'},{km:3600,name:'Izmit'},
-    {km:3800,name:'Ankara'},{km:4012,name:'Kayseri'},{km:4225,name:'Gaziantep'},
-    {km:4438,name:'Antakya'},{km:4650,name:'Damascus'},{km:4862,name:'Irbid'},
-    {km:5075,name:'Amman'},{km:5288,name:'Aqaba'},{km:5500,name:'Cairo'},
-    {km:5743,name:'Beni Suef'},{km:5986,name:'Luxor'},{km:6229,name:'Aswan'},
-    {km:6471,name:'Wadi Halfa'},{km:6714,name:'Atbara'},{km:6957,name:'Khartoum'},
-    {km:7200,name:'Bahir Dar'},{km:7533,name:'Addis Ababa'},{km:7867,name:'Hawassa'},
-    {km:8200,name:'Moyale'},{km:8533,name:'Isiolo'},{km:8867,name:'Nairobi'},
-    {km:9200,name:'Arusha'},{km:9667,name:'Dodoma'},{km:10133,name:'Dar es Salaam'},
-    {km:10600,name:'Mbeya'},{km:11067,name:'Nakonde'},{km:11533,name:'Lusaka'},
-    {km:12000,name:'Livingstone'},{km:12250,name:'Victoria Falls'},{km:12500,name:'Bulawayo'},
-    {km:12929,name:'Francistown'},{km:13357,name:'Gaborone'},{km:13786,name:'Vryburg'},
-    {km:14214,name:'Upington'},{km:14643,name:'Springbok'},{km:15071,name:'Vanrhynsdorp'},
-    {km:15500,name:'Cape Town'},{km:15600,name:'Val de Vie'}
+    {km:0,name:'Liverpool'},{km:26,name:'Warrington'},{km:51,name:'Chester'},
+    {km:79,name:'Whitchurch'},{km:107,name:'Telford'},{km:135,name:'Stourbridge'},
+    {km:163,name:'Stratford-upon-Avon'},{km:191,name:'Oxford'},{km:218,name:'Abingdon'},
+    {km:246,name:'Reading'},{km:274,name:'Twickenham'},{km:302,name:'London'},
+    {km:362,name:'Maidstone'},{km:423,name:'Canterbury'},{km:483,name:'Dover'},
+    {km:502,name:'Calais'},{km:534,name:'Bethune'},{km:567,name:'Arras'},
+    {km:632,name:'Amiens'},{km:691,name:'Compiegne'},{km:750,name:'Pontoise'},
+    {km:809,name:'Paris'},{km:892,name:'Sens'},{km:948,name:'Auxerre'},
+    {km:1050,name:'Dijon'},{km:1129,name:'Beaune, Burgundy'},{km:1171,name:'Chalon-sur-Saone'},
+    {km:1208,name:'Alsace — Mulhouse'},{km:1285,name:'Breisach'},
+    {km:1364,name:'Reutlingen'},{km:1441,name:'Ulm'},{km:1480,name:'Gunzburg'},
+    {km:1518,name:'Ingolstadt'},{km:1557,name:'Regensburg'},{km:1596,name:'Straubing'},
+    {km:1634,name:'Deggendorf'},{km:1673,name:'Passau'},{km:1694,name:'Obernzell'},
+    {km:1717,name:'Aschach an der Donau'},{km:1738,name:'Linz'},
+    {km:1754,name:'Mauthausen'},{km:1769,name:'Grein'},{km:1785,name:'Melk'},
+    {km:1796,name:'Durnstein — Wachau'},{km:1807,name:'Krems'},{km:1829,name:'Tulln'},
+    {km:1840,name:'Vienna'},{km:1891,name:'Bratislava'},{km:1941,name:'Gyor'},
+    {km:1991,name:'Esztergom'},{km:2041,name:'Szentendre'},{km:2091,name:'Budapest'},
+    {km:2254,name:'Novi Sad'},{km:2417,name:'Belgrade'},{km:2486,name:'Smederevo'},
+    {km:2556,name:'Golubac — Iron Gates'},{km:2626,name:'Nis'},{km:2696,name:'Sofia'},
+    {km:2928,name:'Edirne'},{km:3160,name:'Istanbul'},{km:3346,name:'Izmit'},
+    {km:3532,name:'Ankara'},{km:3729,name:'Kayseri'},{km:3927,name:'Gaziantep'},
+    {km:4125,name:'Antakya'},{km:4322,name:'Damascus'},{km:4519,name:'Irbid'},
+    {km:4717,name:'Amman'},{km:4915,name:'Aqaba'},{km:5112,name:'Cairo'},
+    {km:5338,name:'Beni Suef'},{km:5564,name:'Luxor'},{km:5790,name:'Aswan'},
+    {km:6015,name:'Wadi Halfa'},{km:6241,name:'Atbara'},{km:6466,name:'Khartoum'},
+    {km:6692,name:'Bahir Dar'},{km:7002,name:'Addis Ababa'},{km:7312,name:'Hawassa'},
+    {km:7622,name:'Moyale'},{km:7931,name:'Isiolo'},{km:8242,name:'Nairobi'},
+    {km:8551,name:'Arusha'},{km:8985,name:'Dodoma'},{km:9418,name:'Dar es Salaam'},
+    {km:9853,name:'Mbeya'},{km:10287,name:'Nakonde'},{km:10720,name:'Lusaka'},
+    {km:11154,name:'Livingstone'},{km:11386,name:'Victoria Falls'},{km:11619,name:'Bulawayo'},
+    {km:12017,name:'Francistown'},{km:12415,name:'Gaborone'},{km:12814,name:'Vryburg'},
+    {km:13212,name:'Upington'},{km:13610,name:'Springbok'},{km:14008,name:'Vanrhynsdorp'},
+    {km:14407,name:'Cape Town'},{km:13478,name:'Val de Vie'}
   ];
   let best=NAMES[0];
   for(const n of NAMES){if(n.km<=km)best=n;else break;}
@@ -891,6 +891,11 @@ async function init(){
     addYouMarker(snapPt[0], snapPt[1]);
     statusEl.classList.add('done');
 
+    // Refresh location photo with precise road position (more accurate than waypoint interpolation)
+    var cachedKey = 'lp_' + (Math.round(RIDDEN / 10) * 10);
+    try { localStorage.removeItem(cachedKey); } catch(e) {}  // force refresh with road coords
+    fetchLocationPhoto(snapPt[0], snapPt[1], RIDDEN);
+
   } catch(err) {
     console.warn('OSRM unavailable — keeping straight-line route:', err.message);
     statusEl.textContent = 'Approximate route (connect to internet for real roads)';
@@ -924,17 +929,31 @@ function addMilestones(){
     var statusHtml = done
       ? '<div class="p-pass">\u2713 Passed at ' + m.km.toLocaleString() + ' km</div>'
       : '<div class="p-ahead">' + (m.km-RIDDEN).toLocaleString() + ' km ahead</div>';
-    L.marker([m.lat, m.lng], {icon:icon})
-      .bindPopup(
-        '<div class="p-eye">Milestone</div>' +
-        '<div class="p-name">' + m.icon + ' ' + m.name + '</div>' +
-        '<div class="p-km">' + m.km.toLocaleString() + ' km from Liverpool</div>' +
-        '<img class="p-img" src="' + m.img + '" alt="' + m.name + '" loading="lazy">' +
-        '<div class="p-desc">' + m.desc + '</div>' +
-        statusHtml,
-        {maxWidth:260}
-      )
-      .addTo(map);
+    var marker = L.marker([m.lat, m.lng], {icon:icon});
+    var popupId = 'ms-pop-' + m.km;
+    var popupHtml =
+      '<div class="p-eye">Milestone</div>' +
+      '<div class="p-name">' + m.icon + ' ' + m.name + '</div>' +
+      '<div class="p-km">' + m.km.toLocaleString() + ' km from Liverpool</div>' +
+      '<div id="' + popupId + '" style="width:100%;height:140px;background:var(--border);border-radius:5px;margin:8px 0;overflow:hidden">' +
+        '<img id="img-' + popupId + '" src="" alt="" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.4s">' +
+      '</div>' +
+      '<div class="p-desc">' + m.desc + '</div>' +
+      statusHtml;
+    marker.bindPopup(popupHtml, {maxWidth:260});
+    marker.on('popupopen', (function(ms) { return function() {
+      var imgEl = document.getElementById('img-ms-pop-' + ms.km);
+      if (!imgEl || imgEl.src) return;
+      fetch('/.netlify/functions/location-photo?lat=' + ms.lat.toFixed(4) + '&lng=' + ms.lng.toFixed(4) + '&km=' + ms.km)
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (d.photo && d.photo.url && imgEl) {
+            imgEl.src = d.photo.url;
+            imgEl.onload = function(){ imgEl.style.opacity = '1'; };
+          }
+        }).catch(function(){});
+    }; })(m));
+    marker.addTo(map);
   });
 }
 
@@ -1043,6 +1062,8 @@ function updatePanel(ridden) {
   var kv = document.querySelectorAll('.km-val');
   if(kv[0]) kv[0].textContent = ridden.toLocaleString();
   if(kv[1]) kv[1].textContent = (TOTAL_KM-ridden).toLocaleString();
+  var ktg = document.getElementById('km-to-go');
+  if(ktg) ktg.textContent = (TOTAL_KM-ridden).toLocaleString();
   var wk  = Math.max(days/7, 1);
   var eta = new Date();
   eta.setDate(eta.getDate() + Math.round(((TOTAL_KM-ridden)/(ridden/wk))*7));
@@ -1251,12 +1272,9 @@ function showEntryPhoto(total, place, lat, lng, dateStr, km) {
   updatePanel(RIDDEN);
   buildJournal(RIDES);
 
-  // Fetch dynamic location photo for current virtual position
+  // Initial photo with waypoint interpolation (will be refined after OSRM loads)
   var vll = getVirtualLatLng(RIDDEN);
-  if (vll) {
-    console.log('Fetching photo for:', vll.lat, vll.lng, 'km:', RIDDEN);
-    fetchLocationPhoto(vll.lat, vll.lng, RIDDEN);
-  }
+  if (vll) fetchLocationPhoto(vll.lat, vll.lng, RIDDEN);
 
   init();
 })();
