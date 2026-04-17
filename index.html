@@ -226,7 +226,7 @@
       </div>
     </div>
     <!-- Current position photo -->
-    <div style="border-radius:8px;overflow:hidden;position:relative;height:180px;margin-bottom:8px;background:var(--border)">
+    <div style="border-radius:8px;overflow:hidden;position:relative;height:220px;margin-bottom:8px;background:var(--border)">
       <img id="loc-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.6s ease;opacity:0">
       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center" id="loc-img-placeholder" style="pointer-events:none">
         <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">Loading location photo...</div>
@@ -237,7 +237,7 @@
       </div>
     </div>
     <!-- Next milestone photo -->
-    <div style="border-radius:8px;overflow:hidden;position:relative;height:160px;margin-bottom:12px;background:var(--border)">
+    <div style="border-radius:8px;overflow:hidden;position:relative;height:200px;margin-bottom:12px;background:var(--border)">
       <img id="ms-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.6s ease;opacity:0">
       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center" id="ms-img-placeholder" style="pointer-events:none">
         <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">Loading...</div>
@@ -290,13 +290,12 @@ const WAYPOINTS = [
   {lat:50.9513, lng:1.8587},    // Calais
   {lat:50.5500, lng:2.2300},    // Béthune
   {lat:50.2900, lng:2.7800},    // Arras
-  {lat:49.8940, lng:2.2960},    // Amiens — EV3 follows Somme valley
-  {lat:49.2700, lng:2.7700},    // Senlis — EV3 Oise valley south
-  {lat:48.9800, lng:2.5800},    // Meaux — Ourcq canal / EV3
+  {lat:49.8940, lng:2.2960},    // Amiens — EV3 Somme valley
+  {lat:49.4100, lng:2.0800},    // Clermont — direct south on D roads
+  {lat:49.0500, lng:2.0800},    // Pontoise area — Seine valley
   {lat:48.8566, lng:2.3522},    // Paris
 
   // ── FRANCE SOUTH (EV3 → join Rhine/EV6) ──
-  {lat:48.5400, lng:2.6500},    // Melun — Seine south of Paris
   {lat:48.3700, lng:3.2800},    // Sens — EV3 south via Yonne
   {lat:47.9000, lng:3.5800},    // Auxerre
   {lat:47.3220, lng:5.0415},    // Dijon — join EV6 direction east
@@ -414,7 +413,7 @@ const TOTAL_KM = 11850;
 let RIDDEN = 0;
 
 // Pre-computed cumulative km for each waypoint (haversine-scaled to TOTAL_KM)
-var WP_KM = [0,9,27,53,80,114,143,166,184,209,244,254,293,324,342,377,418,456,500,553,581,609,642,678,723,823,963,1001,1087,1143,1197,1233,1277,1328,1347,1366,1382,1405,1421,1443,1455,1469,1499,1503,1527,1552,1590,1654,1699,1720,1735,1937,1992,2035,2109,2189,2296,2525,2695,2761,2952,3182,3379,3495,3816,3870,4095,4286,4387,4563,4821,4963,5204,5471,5773,6269,6585,6776,7035,7352,7521,7705,7964,8273,8807,9254,9673,9969,9976,10276,10403,10735,10938,11251,11402,11602,11808,11824,11834,11842,11846,11850];
+var WP_KM = [0,9,27,53,80,114,143,166,184,209,244,254,293,324,342,377,418,456,500,544,576,609,678,723,823,963,1001,1087,1143,1197,1233,1277,1328,1347,1366,1382,1405,1421,1443,1455,1469,1499,1503,1527,1552,1590,1654,1699,1720,1735,1937,1992,2035,2109,2189,2296,2525,2695,2761,2952,3182,3379,3495,3816,3870,4095,4286,4387,4563,4821,4963,5204,5471,5773,6269,6585,6776,7035,7352,7521,7705,7964,8273,8807,9254,9673,9969,9976,10276,10403,10735,10938,11251,11402,11602,11808,11824,11834,11842,11846,11850];
 
 // Interpolate exact lat/lng using actual km distances between waypoints
 function getVirtualLatLng(km) {
@@ -607,9 +606,14 @@ async function fetchOSRMSegment(wpts){
       return straightLineCoords(wpts);
     }
   }
-  // Also skip if waypoints are in Africa/Middle East (lat < 42, lng > 25)
+  // Skip OSRM for areas with poor cycling data
   var firstPt = wpts[0];
+  // Africa/Middle East
   if (firstPt.lat < 42 && firstPt.lng > 20) {
+    return straightLineCoords(wpts);
+  }
+  // Southern Africa
+  if (firstPt.lat < -10) {
     return straightLineCoords(wpts);
   }
 
@@ -1013,6 +1017,78 @@ function updatePanel(ridden) {
     var msImgName = document.getElementById('ms-img-name');
     if(msImgName) msImgName.textContent = nxt.name;
     fetchMilestonePhoto(nxt);
+  }
+}
+
+// Fetch milestone photo via Netlify function
+async function fetchMilestonePhoto(milestone) {
+  var msImg = document.getElementById('ms-img');
+  var msPh  = document.getElementById('ms-img-placeholder');
+  if (!msImg) return;
+
+  var cKey = 'ms_' + milestone.km;
+  try {
+    var cached = localStorage.getItem(cKey);
+    if (cached) {
+      var d = JSON.parse(cached);
+      if (d && d.url) {
+        msImg.src = d.url;
+        msImg.onload = function(){ msImg.style.opacity='1'; if(msPh) msPh.style.display='none'; };
+        return;
+      }
+    }
+  } catch(e) {}
+
+  try {
+    var res = await fetch('/.netlify/functions/location-photo?lat='+milestone.lat.toFixed(4)+'&lng='+milestone.lng.toFixed(4)+'&km='+milestone.km);
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    var data = await res.json();
+    var url = data.photo && data.photo.url;
+    if (url) {
+      msImg.src = url;
+      msImg.onload = function(){ msImg.style.opacity='1'; if(msPh) msPh.style.display='none'; };
+      try { localStorage.setItem(cKey, JSON.stringify({url:url})); } catch(e2){}
+    }
+  } catch(e) { console.warn('Milestone photo failed:', e.message); }
+}
+
+
+// Fetch location photo via Netlify serverless function (handles Unsplash server-side)
+async function fetchLocationPhoto(lat, lng, km) {
+  var li = document.getElementById('loc-img');
+  var lc = document.querySelector('.loc-cap-name');
+  var ph = document.getElementById('loc-img-placeholder');
+
+  var place = nearestWpName(km);
+  if (lc) lc.textContent = place;
+
+  var cKey = 'lp_' + (Math.round(km / 10) * 10);
+  try {
+    var cached = localStorage.getItem(cKey);
+    if (cached) {
+      var d = JSON.parse(cached);
+      if (d && d.url) {
+        if (lc && d.place) lc.textContent = d.place;
+        if (li) { li.src = d.url; li.onload = function(){ li.style.opacity='1'; if(ph) ph.style.display='none'; }; }
+        return;
+      }
+    }
+  } catch(e) {}
+
+  try {
+    var res = await fetch('/.netlify/functions/location-photo?lat='+lat.toFixed(4)+'&lng='+lng.toFixed(4)+'&km='+Math.round(km));
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    var data = await res.json();
+    var photoUrl = data.photo && data.photo.url;
+    var placeName = data.placeName || place;
+    if (lc) lc.textContent = placeName;
+    if (photoUrl && li) {
+      li.src = photoUrl;
+      li.onload = function(){ li.style.opacity='1'; if(ph) ph.style.display='none'; };
+    }
+    try { localStorage.setItem(cKey, JSON.stringify({url:photoUrl, place:placeName})); } catch(e2){}
+  } catch(e) {
+    console.warn('Photo fetch failed:', e.message);
   }
 }
 
