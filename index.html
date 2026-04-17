@@ -798,7 +798,8 @@ async function init(){
 
   // Fly to current virtual position (near Paris at 612km)
   setTimeout(function(){
-    map.flyTo([48.85, 2.35], 5, {duration:2.5, easeLinearity:0.3});
+    var flyTarget = getVirtualLatLng(RIDDEN);
+    map.flyTo([flyTarget.lat, flyTarget.lng], 7, {duration:2.5, easeLinearity:0.3});
   }, 3200);
 
   // STEP 2 — upgrade to real roads via OSRM in the background
@@ -821,26 +822,35 @@ async function init(){
       fullRouteLine = L.polyline(allCoords, {color:'#2B7FD4', weight:2.5, opacity:0.45}).addTo(map);
     }
 
-    // Final: split at ridden fraction
+    // Final: use OSRM for the full route display (grey/blue ahead line)
+    // but keep waypoint-based ridden line for accuracy
     if (fullRouteLine) map.removeLayer(fullRouteLine);
     if (doneRouteLine) map.removeLayer(doneRouteLine);
 
-    // Find correct split point using WP_KM table
-    // Find which waypoint index we're at
+    // Find waypoint index for current position
     var wpIdx = 0;
     for (var wi = 0; wi < WP_KM.length - 1; wi++) {
       if (WP_KM[wi] <= RIDDEN) wpIdx = wi; else break;
     }
-    // Use fraction of waypoint index to split OSRM coords
-    var wFrac = wpIdx / (WAYPOINTS.length - 1);
-    var split = splitAtFraction(allCoords, wFrac);
-    var rdone = split.done;
 
-    fullRouteLine = L.polyline(allCoords, {color:'#2B7FD4', weight:2.5, opacity:0.45}).addTo(map);
-    doneRouteLine = L.polyline(rdone, {color:'#E8340A', weight:3.5, opacity:0.92}).addTo(map);
-
-    // Always use precise km-interpolated position for the marker
+    // Find the OSRM coord that corresponds to our current waypoint
+    // by finding the closest point in allCoords to our virtual position
     var vllYou = getVirtualLatLng(RIDDEN);
+    var bestIdx = 0, bestDist = Infinity;
+    for (var ci = 0; ci < allCoords.length; ci++) {
+      var dlat = allCoords[ci][0] - vllYou.lat;
+      var dlng = allCoords[ci][1] - vllYou.lng;
+      var d = dlat*dlat + dlng*dlng;
+      if (d < bestDist) { bestDist = d; bestIdx = ci; }
+    }
+
+    // Draw: ridden = red up to bestIdx, ahead = blue from bestIdx
+    var rdone = allCoords.slice(0, bestIdx + 1);
+    var rahead = allCoords.slice(bestIdx);
+
+    doneRouteLine = L.polyline(rdone,  {color:'#E8340A', weight:3.5, opacity:0.92}).addTo(map);
+    fullRouteLine = L.polyline(rahead, {color:'#2B7FD4', weight:2.5, opacity:0.45}).addTo(map);
+
     addYouMarker(vllYou.lat, vllYou.lng);
     statusEl.classList.add('done');
 
