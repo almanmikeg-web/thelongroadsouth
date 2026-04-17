@@ -396,17 +396,22 @@ const WAYPOINTS = [
 const TOTAL_KM = 11850;
 let RIDDEN = 0;
 
-// Interpolate exact lat/lng for any km value along the route
+// Pre-computed cumulative km for each waypoint (haversine-scaled to TOTAL_KM)
+var WP_KM = [0,9,27,53,80,114,143,166,184,209,244,254,293,324,342,377,418,456,500,553,591,609,678,723,823,963,1001,1087,1143,1197,1233,1277,1328,1347,1366,1382,1405,1421,1443,1455,1469,1499,1503,1504,1527,1552,1590,1654,1699,1720,1735,1937,1992,2035,2109,2189,2296,2525,2695,2761,2952,3182,3379,3495,3816,3870,4095,4286,4387,4563,4821,4963,5204,5471,5773,6269,6585,6776,7035,7352,7521,7705,7964,8273,8807,9254,9673,9969,9976,10276,10403,10735,10938,11251,11402,11602,11808,11824,11834,11842,11846,11850];
+
+// Interpolate exact lat/lng using actual km distances between waypoints
 function getVirtualLatLng(km) {
   if (!km || km <= 0) return {lat:WAYPOINTS[0].lat, lng:WAYPOINTS[0].lng};
-  var fraction = km / TOTAL_KM;
-  var idx = Math.min(
-    Math.floor(fraction * (WAYPOINTS.length - 1)),
-    WAYPOINTS.length - 2
-  );
-  var a = WAYPOINTS[idx];
-  var b = WAYPOINTS[idx + 1];
-  var t = (fraction * (WAYPOINTS.length - 1)) - idx;
+  if (km >= TOTAL_KM) return {lat:WAYPOINTS[WAYPOINTS.length-1].lat, lng:WAYPOINTS[WAYPOINTS.length-1].lng};
+  // Binary search for correct segment
+  var lo = 0, hi = WP_KM.length - 1;
+  while (lo < hi - 1) {
+    var mid = Math.floor((lo + hi) / 2);
+    if (WP_KM[mid] <= km) lo = mid; else hi = mid;
+  }
+  var a = WAYPOINTS[lo], b = WAYPOINTS[hi];
+  var segLen = WP_KM[hi] - WP_KM[lo];
+  var t = segLen > 0 ? (km - WP_KM[lo]) / segLen : 0;
   return {
     lat: a.lat + (b.lat - a.lat) * t,
     lng: a.lng + (b.lng - a.lng) * t
@@ -565,17 +570,39 @@ function getImg(km){
 
 function nearestWpName(km){
   const NAMES=[
-    {km:0,name:'Liverpool'},{km:55,name:'Chester'},{km:240,name:'London'},
-    {km:290,name:'Dover'},{km:500,name:'Paris'},{km:820,name:'Alsace'},
-    {km:990,name:'Passau'},{km:1110,name:'Melk'},{km:1145,name:'Wachau Valley'},
-    {km:1200,name:'Vienna'},{km:1450,name:'Budapest'},{km:1800,name:'Belgrade'},
-    {km:2100,name:'Sofia'},{km:2350,name:'Istanbul'},{km:3420,name:'Amman'},
-    {km:3850,name:'Cairo'},{km:4350,name:'Luxor'},{km:4550,name:'Aswan'},
-    {km:5400,name:'Khartoum'},{km:5950,name:'Addis Ababa'},{km:6850,name:'Nairobi'},
-    {km:7100,name:'Arusha'},{km:7600,name:'Dar es Salaam'},{km:8900,name:'Lusaka'},
-    {km:9260,name:'Victoria Falls'},{km:10200,name:'Gaborone'},{km:10750,name:'Upington'},
-    {km:11500,name:'Cape Town'},{km:11600,name:'Stellenbosch'},{km:11700,name:'Franschhoek'},
-    {km:11800,name:'Paarl'},{km:11850,name:'Val de Vie'},
+    {km:0,name:'Liverpool'},{km:9,name:'Warrington'},{km:27,name:'Chester'},
+    {km:53,name:'Whitchurch'},{km:80,name:'Telford'},{km:114,name:'Stourbridge'},
+    {km:143,name:'Stratford-upon-Avon'},{km:166,name:'Oxford'},{km:184,name:'Abingdon'},
+    {km:209,name:'Reading'},{km:244,name:'Twickenham'},{km:254,name:'London'},
+    {km:293,name:'Maidstone'},{km:324,name:'Canterbury'},{km:342,name:'Dover'},
+    {km:377,name:'Calais'},{km:418,name:'Bethune'},{km:456,name:'Arras'},
+    {km:500,name:'Amiens'},{km:553,name:'Compiegne'},{km:591,name:'Pontoise'},
+    {km:609,name:'Paris'},{km:678,name:'Sens'},{km:723,name:'Auxerre'},
+    {km:823,name:'Dijon'},{km:963,name:'Alsace — Mulhouse'},{km:1001,name:'Breisach'},
+    {km:1087,name:'Reutlingen'},{km:1143,name:'Ulm'},{km:1197,name:'Gunzburg'},
+    {km:1233,name:'Ingolstadt'},{km:1277,name:'Regensburg'},{km:1328,name:'Straubing'},
+    {km:1347,name:'Deggendorf'},{km:1366,name:'Passau'},{km:1382,name:'Obernzell'},
+    {km:1405,name:'Aschach an der Donau'},{km:1421,name:'Linz'},
+    {km:1443,name:'Mauthausen'},{km:1455,name:'Grein'},{km:1469,name:'Melk'},
+    {km:1499,name:'Durnstein — Wachau'},{km:1503,name:'Krems'},{km:1527,name:'Tulln'},
+    {km:1552,name:'Vienna'},{km:1590,name:'Bratislava'},{km:1654,name:'Gyor'},
+    {km:1699,name:'Esztergom'},{km:1720,name:'Szentendre'},{km:1735,name:'Budapest'},
+    {km:1937,name:'Novi Sad'},{km:1992,name:'Belgrade'},{km:2035,name:'Smederevo'},
+    {km:2109,name:'Golubac — Iron Gates'},{km:2189,name:'Nis'},{km:2296,name:'Sofia'},
+    {km:2525,name:'Edirne'},{km:2695,name:'Istanbul'},{km:2761,name:'Izmit'},
+    {km:2952,name:'Ankara'},{km:3182,name:'Kayseri'},{km:3379,name:'Gaziantep'},
+    {km:3495,name:'Antakya'},{km:3816,name:'Irbid'},{km:3870,name:'Amman'},
+    {km:4095,name:'Aqaba'},{km:4286,name:'Suez'},{km:4387,name:'Cairo'},
+    {km:4563,name:'Beni Suef'},{km:4821,name:'Luxor'},{km:4963,name:'Aswan'},
+    {km:5204,name:'Wadi Halfa'},{km:5471,name:'Atbara'},{km:5773,name:'Khartoum'},
+    {km:6269,name:'Bahir Dar'},{km:6585,name:'Addis Ababa'},{km:6776,name:'Hawassa'},
+    {km:7035,name:'Moyale'},{km:7352,name:'Isiolo'},{km:7521,name:'Nairobi'},
+    {km:7705,name:'Arusha'},{km:7964,name:'Dodoma'},{km:8273,name:'Dar es Salaam'},
+    {km:8807,name:'Mbeya'},{km:9254,name:'Nakonde'},{km:9673,name:'Lusaka'},
+    {km:9969,name:'Livingstone'},{km:9976,name:'Victoria Falls'},{km:10276,name:'Bulawayo'},
+    {km:10403,name:'Francistown'},{km:10735,name:'Gaborone'},{km:10938,name:'Vryburg'},
+    {km:11251,name:'Upington'},{km:11402,name:'Springbok'},{km:11602,name:'Vanrhynsdorp'},
+    {km:11808,name:'Cape Town'},{km:11850,name:'Val de Vie'}
   ];
   let best=NAMES[0];
   for(const n of NAMES){if(n.km<=km)best=n;else break;}
@@ -591,9 +618,14 @@ async function init(){
   const fallbackCoords = WAYPOINTS.map(w=>[w.lat,w.lng]);
 
   // STEP 1 — draw immediately from waypoints so nothing is ever blank
-  const cutIdx = Math.round(WAYPOINTS.length * (RIDDEN / TOTAL_KM));
+  // Use km-based lookup for correct cut point
+  var cutIdx = 0;
+  for (var ci = 0; ci < WP_KM.length - 1; ci++) {
+    if (WP_KM[ci] <= RIDDEN) cutIdx = ci; else break;
+  }
   const donePts = fallbackCoords.slice(0, Math.max(cutIdx + 1, 1));
-  const youFallback = donePts[donePts.length - 1];
+  const vllFB = getVirtualLatLng(RIDDEN);
+  const youFallback = [vllFB.lat, vllFB.lng];
 
   fullRouteLine = L.polyline(fallbackCoords, {color:'#2B7FD4', weight:2.5, opacity:0.45}).addTo(map);
   doneRouteLine = L.polyline(donePts, {color:'#E8340A', weight:3.5, opacity:0.92}).addTo(map);
@@ -885,24 +917,6 @@ function applyLocationPhoto(data) {
   }
 }
 
-function applyEntryPhoto(data, iId, pId, cId) {
-  var el = document.getElementById(iId);
-  var pl = document.getElementById(pId);
-  var cp = document.getElementById(cId);
-  if (data.placeName && pl) pl.textContent = 'Virtually near ' + data.placeName;
-  if (data.photo && data.photo.url && el) {
-    el.style.opacity = '0';
-    el.src = data.photo.url;
-    el.onload = function() {
-      el.style.transition = 'opacity 0.5s ease';
-      el.style.opacity = '1';
-    };
-  }
-  if (cp && data.photo && data.photo.credit) {
-    cp.textContent = 'Photo: ' + data.photo.credit + ' / Unsplash';
-  }
-}
-
 function buildJournal(rides) {
   var jEl = document.getElementById('journal');
   if(!jEl) return;
@@ -910,48 +924,79 @@ function buildJournal(rides) {
   rides.forEach(function(r) {
     var d  = new Date(r.date);
     var ds = d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    var wp  = nearestWpName(r.total);
-    var vll = getVirtualLatLng(r.total);
-    var div = document.createElement('div');
+    var wp = nearestWpName(r.total);
+    var vll= getVirtualLatLng(r.total);
+    var div= document.createElement('div');
     div.className = 'entry';
-    var imgId     = 'eimg-'  + r.total;
-    var placeElId = 'eplace-' + r.total;
-    var capElId   = 'ecap-'  + r.total;
+    div.style.cursor = 'pointer';
     div.innerHTML =
       '<div class="entry-header">'+
         '<div class="entry-date">'+ds+'</div>'+
         '<div class="entry-km">'+r.km+' km</div>'+
       '</div>'+
       '<div class="entry-total">Total: '+r.total.toLocaleString()+' km</div>'+
-      '<div class="entry-virt">&#x1F4CD; <span id="'+placeElId+'">Virtually near '+wp+'</span></div>'+
-      '<img id="'+imgId+'" class="entry-photo" src="" alt="" style="background:var(--border)">'+
-      '<div class="entry-cap" id="'+capElId+'"></div>'+
+      '<div class="entry-virt" id="evirt-'+r.total+'">&#x1F4CD; <span>'+wp+'</span></div>'+
       (r.note ? '<div class="entry-note">'+r.note+'</div>' : '');
-    jEl.appendChild(div);
 
-    // Lazy-load photo via IntersectionObserver
-    (function(total, lat, lng, iId, pId, cId) {
-      var cKey = 'lp_' + (Math.round(total/5)*5);
-      try {
-        var hit = localStorage.getItem(cKey);
-        if (hit) { applyEntryPhoto(JSON.parse(hit), iId, pId, cId); return; }
-      } catch(e) {}
-      var el = document.getElementById(iId);
-      if (!el) return;
-      var obs = new IntersectionObserver(function(entries) {
-        if (!entries[0].isIntersecting) return;
-        obs.disconnect();
-        fetch('/.netlify/functions/location-photo?lat='+lat.toFixed(5)+'&lng='+lng.toFixed(5)+'&km='+Math.round(total))
-          .then(function(r){return r.json();})
-          .then(function(d){
-            try{localStorage.setItem(cKey,JSON.stringify(d));}catch(e){}
-            applyEntryPhoto(d, iId, pId, cId);
-          }).catch(function(){});
-      },{rootMargin:'200px'});
-      obs.observe(el);
-    })(r.total, vll.lat, vll.lng, imgId, placeElId, capElId);
+    // Click to show location photo in a modal-style overlay
+    div.addEventListener('click', function() {
+      showEntryPhoto(r.total, wp, vll.lat, vll.lng, ds, r.km);
+    });
+
+    jEl.appendChild(div);
   });
 }
+
+// Photo modal
+function showEntryPhoto(total, place, lat, lng, dateStr, km) {
+  var existing = document.getElementById('photo-modal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'photo-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;cursor:pointer';
+  modal.innerHTML =
+    '<div style="max-width:600px;width:100%;background:white;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5)">' +
+      '<div style="position:relative">' +
+        '<img id="modal-img" src="" alt="" style="width:100%;height:300px;object-fit:cover;display:block;background:#eee">' +
+        '<div style="position:absolute;bottom:0;left:0;right:0;padding:14px 16px;background:linear-gradient(transparent,rgba(0,0,0,0.7))">' +
+          '<div style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:3px">'+dateStr+' · '+km+' km</div>' +
+          '<div id="modal-place" style="font-family:var(--font-display);font-size:20px;font-weight:700;color:white;text-transform:uppercase">'+place+'</div>' +
+          '<div id="modal-credit" style="font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,0.6);margin-top:3px"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:14px 16px;font-family:var(--font-mono);font-size:11px;color:#888;text-align:center">Total: '+total.toLocaleString()+' km from Liverpool · Tap anywhere to close</div>' +
+    '</div>';
+
+  modal.addEventListener('click', function() { modal.remove(); });
+  document.body.appendChild(modal);
+
+  // Fetch photo
+  var cKey = 'lp_' + (Math.round(total/5)*5);
+  var cached = null;
+  try { cached = localStorage.getItem(cKey); } catch(e) {}
+
+  function applyModal(data) {
+    var pl = document.getElementById('modal-place');
+    var cr = document.getElementById('modal-credit');
+    var mi = document.getElementById('modal-img');
+    if (data.placeName && pl) pl.textContent = data.placeName;
+    if (data.photo && data.photo.url && mi) mi.src = data.photo.url;
+    if (data.photo && data.photo.credit && cr) cr.textContent = 'Photo: '+data.photo.credit+' / Unsplash';
+  }
+
+  if (cached) {
+    try { applyModal(JSON.parse(cached)); return; } catch(e) {}
+  }
+
+  fetch('/.netlify/functions/location-photo?lat='+lat.toFixed(5)+'&lng='+lng.toFixed(5)+'&km='+Math.round(total))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      try{localStorage.setItem(cKey,JSON.stringify(d));}catch(e){}
+      applyModal(d);
+    }).catch(function(){});
+}
+
 
 (async function boot() {
   var raw      = await fetchRides();
