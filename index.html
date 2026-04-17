@@ -225,20 +225,39 @@
         <div class="km-stat"><div class="km-val">2030</div><div class="km-lbl">est. finish</div></div>
       </div>
     </div>
-    <div class="loc-img">
-      <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=80" alt="" style="transition:opacity 0.6s ease">
-      <div class="loc-cap">
-        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;margin-bottom:3px">Virtually here</div>
-        <div class="loc-cap-name" style="font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase">Loading...</div>
-        <div id="photo-credit" style="font-family:var(--font-mono);font-size:9px;opacity:0.6;margin-top:2px"></div>
+    <!-- Two photos side by side -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <!-- Current position photo -->
+      <div class="loc-img" style="margin-bottom:0;height:160px;border-radius:8px;overflow:hidden;position:relative">
+        <img id="loc-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.6s ease;opacity:0">
+        <div style="position:absolute;inset:0;background:var(--border);display:flex;align-items:center;justify-content:center" id="loc-img-placeholder">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-align:center">Loading...</div>
+        </div>
+        <div class="loc-cap" style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.7))">
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;color:white;margin-bottom:2px">Now</div>
+          <div class="loc-cap-name" style="font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:white">—</div>
+        </div>
+      </div>
+      <!-- Next milestone photo -->
+      <div class="loc-img" style="margin-bottom:0;height:160px;border-radius:8px;overflow:hidden;position:relative">
+        <img id="ms-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.6s ease;opacity:0">
+        <div style="position:absolute;inset:0;background:var(--border);display:flex;align-items:center;justify-content:center" id="ms-img-placeholder">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-align:center">Loading...</div>
+        </div>
+        <div class="loc-cap" style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.7))">
+          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;color:white;margin-bottom:2px">Next milestone</div>
+          <div id="ms-img-name" style="font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:white">—</div>
+        </div>
       </div>
     </div>
-    <div class="ms-card">
-      <div class="ms-icon">🌊</div>
+    <!-- Next milestone info card -->
+    <div class="ms-card" id="ms-card">
+      <div class="ms-icon" id="ms-icon">🏁</div>
       <div>
         <div class="ms-lbl">Next milestone</div>
-        <div class="ms-name">Passau — Three Rivers</div>
-        <div class="ms-km">378 km away</div>
+        <div class="ms-name" id="ms-name">—</div>
+        <div class="ms-km" id="ms-km">—</div>
+        <div id="ms-desc" style="font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.5;font-family:var(--font-body)"></div>
       </div>
     </div>
     <div class="divider"></div>
@@ -423,27 +442,90 @@ let RIDES  = []; // loaded from rides.json
 // MILESTONES
 // ═══════════════════════════════════════
 const MILESTONES = [
-  {lat:51.1295,lng:1.3089,   km:290,  name:'White Cliffs of Dover',     icon:'🪨', desc:'The southern edge of England. The Channel ahead.',                          img:'https://images.unsplash.com/photo-1557456170-0cf4f4d0d362?w=400&q=75'},
-  {lat:48.8566,lng:2.3522,   km:500,  name:'Paris — Eiffel Tower',       icon:'🗼', desc:'First great city. 500 km from your front door.',                            img:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=75'},
-  {lat:48.5734,lng:13.4508,  km:990,  name:'Passau — Three Rivers',      icon:'🌊', desc:'Where the Danube, Inn and Ilz meet. A road you\'ve ridden.',                img:'https://images.unsplash.com/photo-1555990793-da11153b6909?w=400&q=75'},
-  {lat:48.3600,lng:15.1000,  km:1110, name:'Melk Abbey',                 icon:'⛪', desc:'Baroque monastery above the Danube. One of Europe\'s great views.',         img:'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=75'},
-  {lat:48.4000,lng:15.6000,  km:1145, name:'Wachau Valley',              icon:'🍇', desc:'UNESCO-listed Danube gorge. Vineyards on terraced slopes.',                 img:'https://images.unsplash.com/photo-1566438480900-0609be27a4be?w=400&q=75'},
-  {lat:48.2082,lng:16.3738,  km:1200, name:'Vienna',                     icon:'🎭', desc:'The Imperial City. Schönbrunn, the Ringstraße, the Opera House.',           img:'https://images.unsplash.com/photo-1516550893923-42d28e5677af?w=400&q=75'},
-  {lat:47.4979,lng:19.0402,  km:1450, name:'Budapest',                   icon:'🏛', desc:'Buda and Pest divided by the Danube. The Chain Bridge at dusk.',            img:'https://images.unsplash.com/photo-1541849546-216549ae216d?w=400&q=75'},
-  {lat:44.8176,lng:20.4569,  km:1800, name:'Belgrade',                   icon:'⚓', desc:'Serbia\'s capital where the Sava and Danube meet.',                         img:'https://images.unsplash.com/photo-1609158566497-3c1e2a91a4b4?w=400&q=75'},
-  {lat:41.0082,lng:28.9784,  km:2350, name:'Istanbul — Hagia Sophia',    icon:'🕌', desc:'Where Europe ends and Asia begins. 1,500 years of history.',               img:'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=400&q=75'},
-  {lat:31.9454,lng:35.9284,  km:3420, name:'Amman',                      icon:'🏺', desc:'Jordan\'s capital across seven hills. The ancient Citadel above the city.', img:'https://images.unsplash.com/photo-1544012850-b8b1fcbc4f94?w=400&q=75'},
-  {lat:30.0444,lng:31.2357,  km:3850, name:'Pyramids of Giza',           icon:'🏺', desc:'The last surviving wonder of the ancient world.',                           img:'https://images.unsplash.com/photo-1539650116574-75c0c6e29f2f?w=400&q=75'},
-  {lat:25.6872,lng:32.6396,  km:4350, name:'Luxor — Valley of the Kings',icon:'👑', desc:'Karnak temple. The tombs of the pharaohs. 3,000 years of history.',        img:'https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400&q=75'},
-  {lat:24.0889,lng:32.8998,  km:4550, name:'Aswan',                      icon:'🌅', desc:'The Nile at its most dramatic. Feluccas on golden water.',                  img:'https://images.unsplash.com/photo-1562679299-3b1d6e97a8c0?w=400&q=75'},
-  {lat:15.5007,lng:32.5599,  km:5400, name:'Khartoum — Two Niles',       icon:'🌊', desc:'The Blue Nile and White Nile meet here.',                                   img:'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=400&q=75'},
-  {lat:12.3646,lng:37.3922,  km:5700, name:'Lake Tana & Blue Nile Falls', icon:'💧', desc:'Source of the Blue Nile. Tis Abay falls thunder into the gorge.',           img:'https://images.unsplash.com/photo-1489493887464-892be6d1daae?w=400&q=75'},
-  {lat:0.0000, lng:37.5000,  km:6700, name:'Equator Crossing',           icon:'🌍', desc:'The moment the Southern Hemisphere begins.',                                img:'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=400&q=75'},
-  {lat:-1.2921,lng:36.8219,  km:6850, name:'Nairobi National Park',      icon:'🦁', desc:'Lions with a city skyline behind them. Africa in one frame.',               img:'https://images.unsplash.com/photo-1548574505-5e239809ee19?w=400&q=75'},
-  {lat:-3.3869,lng:36.6830,  km:7100, name:'Arusha — Kilimanjaro View',  icon:'🏔', desc:'Africa\'s highest peak visible from the road on a clear morning.',          img:'https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=400&q=75'},
-  {lat:-17.924,lng:25.8572,  km:9260, name:'Victoria Falls',             icon:'💧', desc:'The smoke that thunders. 1,700 metres wide. Heard before it\'s seen.',      img:'https://images.unsplash.com/photo-1543946602-a0fce8117697?w=400&q=75'},
-  {lat:-33.925,lng:18.4241,  km:11500,name:'Cape Town — Table Mountain', icon:'🏔', desc:'The city beneath the mountain. End of Africa.',                             img:'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=400&q=75'},
-  {lat:-33.791944,lng:18.970111, km:11850,name:'Val de Vie — Finish Line',   icon:'🏆', desc:'Home. The Long Road South is complete.',                                    img:'https://images.unsplash.com/photo-1607268490963-b7873e8cb6b0?w=400&q=75'},
+  // ── ENGLAND ──
+  {lat:53.1935,lng:-2.8928, km:27,   name:'Chester',               icon:'🏰', desc:'Roman walls and medieval cathedral. England begins to narrow southward.'},
+  {lat:51.7520,lng:-1.2580, km:184,  name:'Oxford',                icon:'🎓', desc:'City of dreaming spires. Halfway to London.'},
+  {lat:51.4900,lng:-0.1200, km:254,  name:'London',                icon:'🎡', desc:'Capital city. The Thames. More than a quarter of England behind you.'},
+  {lat:51.2800,lng:1.0800,  km:324,  name:'Canterbury',            icon:'⛪', desc:'The great cathedral. Pilgrims have walked this road for a thousand years.'},
+  {lat:51.1295,lng:1.3089,  km:342,  name:'White Cliffs of Dover', icon:'🪨', desc:'The southern edge of England. France visible on a clear day.'},
+
+  // ── FRANCE — NORTH ──
+  {lat:50.9513,lng:1.8587,  km:377,  name:'Calais',                icon:'⚓', desc:'First step on the continent. The Channel crossed.'},
+  {lat:50.2900,lng:2.7800,  km:456,  name:'Arras',                 icon:'🌻', desc:'Flanders fields. The Great War battlefields stretch across this landscape.'},
+  {lat:49.8940,lng:2.2960,  km:500,  name:'Amiens',                icon:'🏛️', desc:'Gothic cathedral, the tallest in France. EuroVelo 3 follows the Somme valley south.'},
+  {lat:49.4000,lng:2.8300,  km:553,  name:'Compiègne',             icon:'🌲', desc:'Royal forest. The Armistice was signed here in 1918.'},
+  {lat:48.8566,lng:2.3522,  km:609,  name:'Paris',                 icon:'🗼', desc:'The Eiffel Tower. Notre Dame. 609 km from your front door in Liverpool.'},
+
+  // ── FRANCE — SOUTH ──
+  {lat:47.9000,lng:3.5800,  km:723,  name:'Auxerre',               icon:'🍷', desc:'Burgundy begins. Vineyards replace the flat northern plains.'},
+  {lat:47.3220,lng:5.0415,  km:823,  name:'Dijon',                 icon:'🥗', desc:'Mustard capital of the world. The Route des Grands Crus lies just south.'},
+  {lat:47.7400,lng:7.3100,  km:963,  name:'Mulhouse — Alsace',     icon:'🍺', desc:'The Rhine valley. Alsace with its half-timbered villages and white wines.'},
+
+  // ── GERMANY / DANUBE ──
+  {lat:47.9800,lng:7.8500,  km:1001, name:'Breisach — Rhine',      icon:'🏔️', desc:'Crossing the Rhine into Germany. The Black Forest rises to the east.'},
+  {lat:48.3974,lng:9.9919,  km:1143, name:'Ulm',                   icon:'⛪', desc:'The world\'s tallest church spire. The Danube begins here — follow it all the way to Budapest.'},
+  {lat:48.9900,lng:12.1000, km:1277, name:'Regensburg',            icon:'🏛️', desc:'UNESCO old town. The oldest city on the Danube. Stone bridge built in 1135.'},
+  {lat:48.5734,lng:13.4508, km:1366, name:'Passau — Three Rivers', icon:'🌊', desc:'The Inn, the Ilz and the Danube meet here. Austria begins just downstream.'},
+
+  // ── AUSTRIA — DANUBE CYCLE PATH ──
+  {lat:48.2912,lng:14.2900, km:1421, name:'Linz',                  icon:'🎨', desc:'Upper Austrian capital. Anton Bruckner\'s city. European Capital of Culture 2009.'},
+  {lat:48.2300,lng:15.1000, km:1469, name:'Melk Abbey',            icon:'🏰', desc:'Baroque masterpiece on a cliff above the Danube. The Wachau begins.'},
+  {lat:48.3900,lng:15.5400, km:1499, name:'Dürnstein — Wachau',    icon:'🍇', desc:'UNESCO World Heritage landscape. Vineyards, apricot orchards, castle ruins. Richard the Lionheart was imprisoned here.'},
+  {lat:48.4100,lng:15.6100, km:1503, name:'Krems',                 icon:'🍷', desc:'Wine capital of the Wachau. The valley opens out toward Vienna.'},
+  {lat:48.2082,lng:16.3738, km:1552, name:'Vienna',                icon:'🎻', desc:'Imperial city. Schönbrunn Palace, the Opera, the Ringstrasse. One of the great capitals of Europe.'},
+
+  // ── HUNGARY ──
+  {lat:47.7800,lng:18.7400, km:1699, name:'Esztergom',             icon:'⛪', desc:'Hungary\'s largest basilica. The dramatic Danube Bend begins.'},
+  {lat:47.4979,lng:19.0402, km:1735, name:'Budapest',              icon:'🛁', desc:'The Pearl of the Danube. Thermal baths, the Chain Bridge, Parliament at night.'},
+
+  // ── SERBIA ──
+  {lat:45.2671,lng:19.8335, km:1937, name:'Novi Sad',              icon:'🎵', desc:'Serbia\'s second city. EXIT Festival. The Petrovaradin fortress looms over the river.'},
+  {lat:44.8176,lng:20.4569, km:1992, name:'Belgrade',              icon:'🏙️', desc:'Where the Sava meets the Danube. Kalemegdan fortress. The Balkans begin in earnest.'},
+  {lat:44.2100,lng:22.1000, km:2109, name:'Iron Gates Gorge',      icon:'🏔️', desc:'The Danube forces its way through the Carpathian mountains. One of Europe\'s most dramatic landscapes.'},
+
+  // ── BULGARIA / TURKEY ──
+  {lat:42.6977,lng:23.3219, km:2296, name:'Sofia',                 icon:'🏛️', desc:'Bulgaria\'s capital. Alexander Nevsky Cathedral. The Balkans at their most atmospheric.'},
+  {lat:41.6818,lng:26.5597, km:2525, name:'Edirne',                icon:'🕌', desc:'Ottoman masterpiece. The Selimiye Mosque. The last city before Istanbul.'},
+  {lat:41.0082,lng:28.9784, km:2695, name:'Istanbul',              icon:'🕌', desc:'Where Europe becomes Asia. Hagia Sophia, the Bosphorus, the Grand Bazaar. Halfway across Turkey.'},
+  {lat:40.1553,lng:32.6500, km:2952, name:'Ankara',                icon:'🇹🇷', desc:'Turkish capital. Heart of Anatolia. The landscape turns drier and more ancient.'},
+  {lat:37.0662,lng:37.3833, km:3379, name:'Gaziantep',             icon:'🥜', desc:'Pistachio capital of the world. The Syrian border approaches. The Middle East begins.'},
+
+  // ── JORDAN / MIDDLE EAST ──
+  {lat:31.9454,lng:35.9284, km:3870, name:'Amman',                 icon:'🏺', desc:'Jordan\'s capital built on seven hills. Ancient Roman theatre. Petra is not far south.'},
+  {lat:29.5267,lng:35.0060, km:4095, name:'Aqaba',                 icon:'🌊', desc:'Red Sea. Africa visible across the water. The ferry to Egypt departs from here.'},
+
+  // ── EGYPT ──
+  {lat:30.0444,lng:31.2357, km:4387, name:'Cairo — Pyramids',      icon:'🔺', desc:'The Great Pyramids of Giza. The Sphinx. 4,500 years of history. Africa truly begins.'},
+  {lat:25.6872,lng:32.6396, km:4821, name:'Luxor — Valley of Kings',icon:'🔱',desc:'Temple of Karnak. Valley of the Kings. The greatest open-air museum in the world.'},
+  {lat:24.0889,lng:32.8998, km:4963, name:'Aswan',                 icon:'⚓', desc:'The Nile narrows. Feluccas on the water. Sudan is just downstream.'},
+
+  // ── SUDAN ──
+  {lat:21.7547,lng:31.3526, km:5204, name:'Wadi Halfa',            icon:'🏜️', desc:'The Sudanese border. Lake Nasser behind you. The Nubian Desert ahead.'},
+  {lat:15.5007,lng:32.5599, km:5773, name:'Khartoum — Two Niles',  icon:'🌊', desc:'The Blue and White Nile meet here. Sudan\'s capital. Over halfway to Val de Vie.'},
+
+  // ── ETHIOPIA ──
+  {lat:12.3646,lng:37.3922, km:6269, name:'Lake Tana',             icon:'🚣', desc:'Source of the Blue Nile. Ancient island monasteries. The Ethiopian Highlands rise ahead.'},
+  {lat:9.0320,lng:38.7469,  km:6585, name:'Addis Ababa',           icon:'☕', desc:'Africa\'s highest capital. Coffee was born here. The roof of Africa.'},
+
+  // ── KENYA ──
+  {lat:0.0000,lng:37.0000,  km:7200, name:'Equator Crossing',      icon:'🌍', desc:'Zero degrees latitude. The northern hemisphere is behind you. Halfway between the poles.'},
+  {lat:-1.2921,lng:36.8219, km:7521, name:'Nairobi',               icon:'🦁', desc:'Safari capital. Nairobi National Park — lions with skyscrapers in the background.'},
+
+  // ── TANZANIA ──
+  {lat:-3.3869,lng:36.6830, km:7705, name:'Arusha — Kilimanjaro',  icon:'🏔️', desc:'Kilimanjaro visible on a clear day. The Serengeti begins here. Africa at its most epic.'},
+  {lat:-6.7924,lng:39.2083, km:8273, name:'Dar es Salaam',         icon:'⚓', desc:'Tanzania\'s largest city. Indian Ocean port. Zanzibar is just offshore.'},
+
+  // ── ZAMBIA ──
+  {lat:-15.417,lng:28.2833, km:9673, name:'Lusaka',                icon:'🌅', desc:'Zambia\'s capital. Southern Africa. The end is beginning to feel possible.'},
+
+  // ── ZIMBABWE ──
+  {lat:-17.924,lng:25.8572, km:9976, name:'Victoria Falls',        icon:'💦', desc:'Mosi-oa-Tunya — the smoke that thunders. One of the seven natural wonders of the world.'},
+
+  // ── BOTSWANA / SOUTH AFRICA ──
+  {lat:-24.654,lng:25.9087, km:10735,name:'Gaborone',              icon:'🌍', desc:'Botswana\'s capital. The Kalahari to the west. South Africa just ahead.'},
+  {lat:-28.448,lng:21.2561, km:11251,name:'Upington',              icon:'🍊', desc:'Orange River. Northern Cape. The last desert before the Cape.'},
+  {lat:-33.925,lng:18.4241, km:11808,name:'Cape Town — Table Mountain',icon:'🏔️',desc:'Table Mountain. The Mother City. The Atlantic and Indian Oceans meet just south of here.'},
+  {lat:-33.791944,lng:18.970111,km:11850,name:'Val de Vie — FINISH!',icon:'🏁',desc:'Home. 11,850 km. Liverpool to your doorstep. Done.'},
 ];
 
 // ═══════════════════════════════════════
@@ -504,14 +586,59 @@ function chunkWaypoints(arr, size){
   return chunks;
 }
 
+function haversineKm(a, b) {
+  var R = 6371;
+  var dlat = (b.lat-a.lat)*Math.PI/180;
+  var dlng = (b.lng-a.lng)*Math.PI/180;
+  var aa = Math.sin(dlat/2)*Math.sin(dlat/2) +
+    Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*
+    Math.sin(dlng/2)*Math.sin(dlng/2);
+  return R*2*Math.atan2(Math.sqrt(aa),Math.sqrt(1-aa));
+}
+
+function straightLineCoords(wpts) {
+  // Return straight-line coords between waypoints (no OSRM)
+  return wpts.map(w => [w.lng, w.lat]);
+}
+
 async function fetchOSRMSegment(wpts){
-  const coords = wpts.map(w=>`${w.lng},${w.lat}`).join(';');
-  const url = `https://router.project-osrm.org/route/v1/cycling/${coords}?overview=full&geometries=geojson&steps=false`;
-  const r = await fetch(url);
-  if(!r.ok) throw new Error('OSRM error '+r.status);
-  const d = await r.json();
-  if(!d.routes||!d.routes[0]) throw new Error('No route returned');
-  return d.routes[0].geometry.coordinates; // [[lng,lat], ...]
+  // Check if any segment gap is > 300km - if so use straight lines
+  // OSRM cycling has no data in Turkey/Middle East/Africa
+  for (var i = 0; i < wpts.length-1; i++) {
+    if (haversineKm(wpts[i], wpts[i+1]) > 300) {
+      return straightLineCoords(wpts);
+    }
+  }
+  // Also skip if waypoints are in Africa/Middle East (lat < 42, lng > 25)
+  var firstPt = wpts[0];
+  if (firstPt.lat < 42 && firstPt.lng > 20) {
+    return straightLineCoords(wpts);
+  }
+
+  try {
+    const coords = wpts.map(w=>`${w.lng},${w.lat}`).join(';');
+    const url = `https://router.project-osrm.org/route/v1/cycling/${coords}?overview=full&geometries=geojson&steps=false`;
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('OSRM error '+r.status);
+    const d = await r.json();
+    if(!d.routes||!d.routes[0]) throw new Error('No route returned');
+    // Sanity check - if OSRM route is >3x the straight line distance, reject it
+    var straightDist = 0;
+    for (var j = 0; j < wpts.length-1; j++) straightDist += haversineKm(wpts[j], wpts[j+1]);
+    var osrmCoords = d.routes[0].geometry.coordinates;
+    var osrmDist = 0;
+    for (var k = 0; k < osrmCoords.length-1; k++) {
+      osrmDist += haversineKm({lat:osrmCoords[k][1],lng:osrmCoords[k][0]},{lat:osrmCoords[k+1][1],lng:osrmCoords[k+1][0]});
+    }
+    if (osrmDist > straightDist * 2.5) {
+      console.warn('OSRM route suspiciously long, using straight line');
+      return straightLineCoords(wpts);
+    }
+    return osrmCoords;
+  } catch(e) {
+    console.warn('OSRM failed, using straight line:', e.message);
+    return straightLineCoords(wpts);
+  }
 }
 
 function lngLatToLeaflet(coords){
@@ -870,15 +997,61 @@ function updatePanel(ridden) {
   if(li) li.src = img.url;
   if(lc) lc.textContent = near;
 
-  // Next milestone card
+  // Next milestone card - use IDs not classes for precision
+  var nxtAll = MILESTONES.filter(function(m){ return m.km > ridden; });
+  var nxt = nxtAll[0];
   if(nxt) {
-    var mi = document.querySelector('.ms-icon');
-    var mn = document.querySelector('.ms-name');
-    var mk = document.querySelector('.ms-km');
+    var mi = document.getElementById('ms-icon');
+    var mn = document.getElementById('ms-name');
+    var mk = document.getElementById('ms-km');
+    var md = document.getElementById('ms-desc');
     if(mi) mi.textContent = nxt.icon;
     if(mn) mn.textContent = nxt.name;
-    if(mk) mk.textContent = (nxt.km-ridden).toLocaleString()+' km away';
+    if(mk) mk.textContent = ((nxt.km-ridden).toFixed(0))+' km away · '+nxt.km.toLocaleString()+' km from Liverpool';
+    if(md) md.textContent = nxt.desc || '';
+
+    // Next milestone photo - use Unsplash directly
+    var msImgName = document.getElementById('ms-img-name');
+    if(msImgName) msImgName.textContent = nxt.name;
+    fetchMilestonePhoto(nxt);
   }
+}
+
+// Fetch milestone photo directly from Unsplash
+async function fetchMilestonePhoto(milestone) {
+  var msImg = document.getElementById('ms-img');
+  var msPlaceholder = document.getElementById('ms-img-placeholder');
+  if(!msImg) return;
+
+  var cKey = 'ms_' + milestone.km;
+  try {
+    var cached = localStorage.getItem(cKey);
+    if(cached) {
+      var data = JSON.parse(cached);
+      if(data && data.url) {
+        msImg.src = data.url;
+        msImg.onload = function(){ msImg.style.opacity='1'; if(msPlaceholder) msPlaceholder.style.display='none'; };
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Search by milestone name
+  var query = encodeURIComponent(milestone.name.split('—')[0].trim() + ' travel landscape');
+  try {
+    var res = await fetch(
+      'https://api.unsplash.com/photos/random?query=' + query +
+      '&orientation=landscape&content_filter=high',
+      { headers: { 'Authorization': 'Client-ID ayeoZOU5dQiAM9QwfcNGyDdbiQ21Fz0bJjBZuOAOGac' } }
+    );
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var data = await res.json();
+    if(data.urls && data.urls.regular) {
+      try { localStorage.setItem(cKey, JSON.stringify({url: data.urls.regular})); } catch(e) {}
+      msImg.src = data.urls.regular;
+      msImg.onload = function(){ msImg.style.opacity='1'; if(msPlaceholder) msPlaceholder.style.display='none'; };
+    }
+  } catch(e) { console.warn('Milestone photo failed:', e.message); }
 }
 
 // Fetch dynamic location photo from our serverless function
@@ -924,11 +1097,11 @@ async function fetchLocationPhoto(lat, lng, km) {
       );
       if (uRes.ok) {
         var uData = await uRes.json();
-        var li2 = document.querySelector('.loc-img img');
+        var li2 = document.getElementById('loc-img');
+        var ph2 = document.getElementById('loc-img-placeholder');
         if (li2 && uData.urls) {
-          li2.style.opacity = '0';
           li2.src = uData.urls.regular;
-          li2.onload = function(){ li2.style.transition='opacity 0.6s'; li2.style.opacity='1'; };
+          li2.onload = function(){ li2.style.opacity='1'; if(ph2) ph2.style.display='none'; };
         }
         var cr = document.getElementById('photo-credit');
         if (cr && uData.user) cr.innerHTML = 'Photo: <a href="'+uData.user.links.html+'" target="_blank" style="color:rgba(255,255,255,0.7)">'+uData.user.name+'</a> / Unsplash';
@@ -938,25 +1111,19 @@ async function fetchLocationPhoto(lat, lng, km) {
 }
 
 function applyLocationPhoto(data) {
-  var li = document.querySelector('.loc-img img');
+  var li = document.getElementById('loc-img');
   var lc = document.querySelector('.loc-cap-name');
-  var credit = document.getElementById('photo-credit');
+  var placeholder = document.getElementById('loc-img-placeholder');
 
   if (lc) lc.textContent = data.placeName || nearestWpName(RIDDEN);
 
   if (data.photo && data.photo.url) {
     if (li) {
-      li.style.opacity = '0';
       li.src = data.photo.url;
       li.onload = function() {
-        li.style.transition = 'opacity 0.6s ease';
         li.style.opacity = '1';
+        if(placeholder) placeholder.style.display = 'none';
       };
-    }
-    if (credit && data.photo.credit) {
-      credit.innerHTML = 'Photo: <a href="' + (data.photo.creditUrl || '#') +
-        '" target="_blank" style="color:rgba(255,255,255,0.8)">' +
-        data.photo.credit + '</a> / Unsplash';
     }
   }
 }
