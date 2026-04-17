@@ -387,6 +387,7 @@ const WAYPOINTS = [
   // ── ZAMBIA ──
   {lat:-8.9000, lng:33.4600},   // Mbeya
   {lat:-9.3000, lng:32.8000},    // Tunduma
+  {lat:-10.200, lng:30.9000},    // Isoka
   {lat:-10.667, lng:28.6333},   // Nakonde
   {lat:-11.833, lng:31.450},    // Mpika
   {lat:-13.967, lng:29.717},    // Serenje
@@ -399,6 +400,7 @@ const WAYPOINTS = [
 
   // ── BOTSWANA ──
   {lat:-21.177, lng:27.5141},   // Francistown
+  {lat:-22.450, lng:27.010},    // Palapye
   {lat:-24.654, lng:25.9087},   // Gaborone
 
   // ── SOUTH AFRICA ──
@@ -420,7 +422,7 @@ const TOTAL_KM = 15600;
 let RIDDEN = 0;
 
 // Pre-computed cumulative km for each waypoint (haversine-scaled to TOTAL_KM)
-var WP_KM = [0,30,59,89,118,148,177,207,236,266,295,325,390,455,520,570,620,670,720,770,820,870,957,1043,1130,1300,1356,1411,1467,1522,1578,1633,1689,1744,1800,1823,1847,1870,1887,1903,1920,1935,1950,1965,1980,2034,2088,2142,2196,2250,2425,2600,2675,2750,2825,2900,3150,3400,3600,3800,3989,4178,4367,4556,4744,4933,5122,5311,5500,5783,6067,6350,6633,6917,7200,7450,7700,7950,8200,8450,8700,8950,9200,9480,9760,10040,10320,10600,10880,11160,11440,11720,12000,12250,12500,12875,13250,13625,14000,14375,14750,15125,15500,15520,15540,15560,15580,15600];
+var WP_KM = [0,32,65,98,130,162,195,227,260,292,325,325,390,455,520,570,620,670,720,770,820,870,957,1043,1130,1197,1264,1331,1398,1465,1532,1599,1666,1733,1800,1818,1836,1854,1872,1890,1908,1926,1944,1962,1980,2034,2088,2142,2196,2250,2425,2600,2675,2750,2825,2900,3150,3400,3600,3800,3989,4178,4367,4556,4744,4933,5122,5311,5500,5783,6067,6350,6633,6917,7200,7450,7700,7950,8200,8450,8700,8950,9200,9455,9709,9964,10218,10473,10727,10982,11236,11491,11745,12000,12250,12500,12833,13167,13500,13833,14167,14500,14833,15167,15500,15520,15540,15560,15580,15600];
 
 // Interpolate exact lat/lng using actual km distances between waypoints
 function getVirtualLatLng(km) {
@@ -622,17 +624,14 @@ async function fetchOSRMSegment(wpts){
 
   // Pick OSRM profile based on geography
   var profile;
-  if (firstPt.lat < -5) {
-    // Deep Africa — OSRM driving works but can be slow, use straight lines
-    return straightLineCoords(wpts);
-  } else if (firstPt.lat < 20) {
-    // North/East Africa and Middle East — use driving
+  if (firstPt.lat < 48 && firstPt.lng > 16) {
+    // Balkans, Turkey, Middle East, Africa — all use driving
     profile = 'driving';
-  } else if (firstPt.lat < 37 && firstPt.lng > 25) {
-    // Egypt, Jordan, Syria — use driving
+  } else if (firstPt.lat < 37) {
+    // North Africa, Middle East west of 16E
     profile = 'driving';
-  } else if (firstPt.lat < 48 && firstPt.lng > 16) {
-    // Balkans, Turkey, Eastern Europe — use driving
+  } else if (firstPt.lat < 0) {
+    // Southern Africa
     profile = 'driving';
   } else {
     // Western/Central Europe — use cycling
