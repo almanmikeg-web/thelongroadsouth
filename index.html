@@ -33,7 +33,7 @@
       /* Mono data color */
       --data:     #E8340A;
 
-      --pw:380px;--hh:60px;
+      --pw:460px;--hh:60px;
 
       /* Fonts */
       --font-display: 'Barlow Condensed', sans-serif;
@@ -225,29 +225,26 @@
         <div class="km-stat"><div class="km-val">2030</div><div class="km-lbl">est. finish</div></div>
       </div>
     </div>
-    <!-- Two photos side by side -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <!-- Current position photo -->
-      <div class="loc-img" style="margin-bottom:0;height:160px;border-radius:8px;overflow:hidden;position:relative">
-        <img id="loc-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.6s ease;opacity:0">
-        <div style="position:absolute;inset:0;background:var(--border);display:flex;align-items:center;justify-content:center" id="loc-img-placeholder">
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-align:center">Loading...</div>
-        </div>
-        <div class="loc-cap" style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.7))">
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;color:white;margin-bottom:2px">Now</div>
-          <div class="loc-cap-name" style="font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:white">—</div>
-        </div>
+    <!-- Current position photo -->
+    <div style="border-radius:8px;overflow:hidden;position:relative;height:180px;margin-bottom:8px;background:var(--border)">
+      <img id="loc-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.6s ease;opacity:0">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center" id="loc-img-placeholder">
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">Loading location photo...</div>
       </div>
-      <!-- Next milestone photo -->
-      <div class="loc-img" style="margin-bottom:0;height:160px;border-radius:8px;overflow:hidden;position:relative">
-        <img id="ms-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.6s ease;opacity:0">
-        <div style="position:absolute;inset:0;background:var(--border);display:flex;align-items:center;justify-content:center" id="ms-img-placeholder">
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);text-align:center">Loading...</div>
-        </div>
-        <div class="loc-cap" style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.7))">
-          <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;color:white;margin-bottom:2px">Next milestone</div>
-          <div id="ms-img-name" style="font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:white">—</div>
-        </div>
+      <div class="loc-cap" style="position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.75))">
+        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;opacity:0.75;color:white;margin-bottom:3px">You are virtually here</div>
+        <div class="loc-cap-name" style="font-family:var(--font-display);font-size:17px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:white;line-height:1.1">—</div>
+      </div>
+    </div>
+    <!-- Next milestone photo -->
+    <div style="border-radius:8px;overflow:hidden;position:relative;height:160px;margin-bottom:12px;background:var(--border)">
+      <img id="ms-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.6s ease;opacity:0">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center" id="ms-img-placeholder">
+        <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">Loading...</div>
+      </div>
+      <div class="loc-cap" style="position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.75))">
+        <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;opacity:0.75;color:white;margin-bottom:3px">Next milestone</div>
+        <div id="ms-img-name" style="font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:white;line-height:1.1">—</div>
       </div>
     </div>
     <!-- Next milestone info card -->
@@ -830,8 +827,9 @@ async function init(){
     fullRouteLine = L.polyline(allCoords, {color:'#2B7FD4', weight:2.5, opacity:0.45}).addTo(map);
     doneRouteLine = L.polyline(rdone, {color:'#E8340A', weight:3.5, opacity:0.92}).addTo(map);
 
-    var youPt = rdone.length > 0 ? rdone[rdone.length - 1] : allCoords[0];
-    addYouMarker(youPt[0], youPt[1]);
+    // Always use precise km-interpolated position for the marker
+    var vllYou = getVirtualLatLng(RIDDEN);
+    addYouMarker(vllYou.lat, vllYou.lng);
     statusEl.classList.add('done');
 
   } catch(err) {
@@ -1015,6 +1013,104 @@ function updatePanel(ridden) {
     if(msImgName) msImgName.textContent = nxt.name;
     fetchMilestonePhoto(nxt);
   }
+}
+
+// Fetch milestone photo directly from Unsplash
+async function fetchMilestonePhoto(milestone) {
+  var msImg = document.getElementById('ms-img');
+  var msPlaceholder = document.getElementById('ms-img-placeholder');
+  if(!msImg) return;
+
+  var cKey = 'ms_' + milestone.km;
+  try {
+    var cached = localStorage.getItem(cKey);
+    if(cached) {
+      var data = JSON.parse(cached);
+      if(data && data.url) {
+        msImg.src = data.url;
+        msImg.onload = function(){ msImg.style.opacity='1'; if(msPlaceholder) msPlaceholder.style.display='none'; };
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Search by milestone name
+  var query = encodeURIComponent(milestone.name.split('—')[0].trim() + ' travel landscape');
+  try {
+    var res = await fetch(
+      'https://api.unsplash.com/photos/random?query=' + query +
+      '&orientation=landscape&content_filter=high',
+      { headers: { 'Authorization': 'Client-ID ayeoZOU5dQiAM9QwfcNGyDdbiQ21Fz0bJjBZuOAOGac' } }
+    );
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var data = await res.json();
+    if(data.urls && data.urls.regular) {
+      try { localStorage.setItem(cKey, JSON.stringify({url: data.urls.regular})); } catch(e) {}
+      msImg.src = data.urls.regular;
+      msImg.onload = function(){ msImg.style.opacity='1'; if(msPlaceholder) msPlaceholder.style.display='none'; };
+    }
+  } catch(e) { console.warn('Milestone photo failed:', e.message); }
+}
+
+// Fetch location photo directly from Unsplash
+const UNSPLASH_KEY = 'ayeoZOU5dQiAM9QwfcNGyDdbiQ21Fz0bJjBZuOAOGac';
+
+async function fetchLocationPhoto(lat, lng, km) {
+  var li = document.getElementById('loc-img');
+  var lc = document.querySelector('.loc-cap-name');
+  var ph = document.getElementById('loc-img-placeholder');
+
+  // Show nearest waypoint name immediately
+  var place = nearestWpName(km);
+  if (lc) lc.textContent = place;
+
+  // Check cache
+  var cKey = 'lp_' + (Math.round(km / 10) * 10);
+  try {
+    var cached = localStorage.getItem(cKey);
+    if (cached) {
+      var d = JSON.parse(cached);
+      if (d && d.url) {
+        if(lc && d.place) lc.textContent = d.place;
+        if(li){ li.src=d.url; li.onload=function(){ li.style.opacity='1'; if(ph) ph.style.display='none'; }; }
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Try Netlify function first (gives reverse geocoded name)
+  try {
+    var res = await fetch(
+      '/.netlify/functions/location-photo?lat='+lat.toFixed(4)+'&lng='+lng.toFixed(4)+'&km='+Math.round(km),
+      { signal: AbortSignal.timeout(4000) }
+    );
+    if (res.ok) {
+      var data = await res.json();
+      if (data.photo && data.photo.url) {
+        var placeName = data.placeName || place;
+        if(lc) lc.textContent = placeName;
+        if(li){ li.src=data.photo.url; li.onload=function(){ li.style.opacity='1'; if(ph) ph.style.display='none'; }; }
+        try { localStorage.setItem(cKey, JSON.stringify({url:data.photo.url, place:placeName})); } catch(e2){}
+        return;
+      }
+    }
+  } catch(e) { /* fall through to direct Unsplash */ }
+
+  // Direct Unsplash fallback
+  try {
+    var query = place + ' travel scenic';
+    var uRes = await fetch(
+      'https://api.unsplash.com/photos/random?query='+encodeURIComponent(query)+'&orientation=landscape&content_filter=high',
+      { headers: { 'Authorization': 'Client-ID '+UNSPLASH_KEY } }
+    );
+    if (uRes.ok) {
+      var uData = await uRes.json();
+      if (uData.urls && uData.urls.regular) {
+        if(li){ li.src=uData.urls.regular; li.onload=function(){ li.style.opacity='1'; if(ph) ph.style.display='none'; }; }
+        try { localStorage.setItem(cKey, JSON.stringify({url:uData.urls.regular, place:place})); } catch(e2){}
+      }
+    }
+  } catch(e) { console.warn('Photo fetch failed:', e.message); }
 }
 
 // Fetch milestone photo directly from Unsplash
