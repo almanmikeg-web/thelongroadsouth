@@ -1021,6 +1021,8 @@ function updatePanel(ridden) {
 }
 
 // Fetch milestone photo via Netlify function
+// ── PHOTO FUNCTIONS — all go via Netlify function (server-side, no CORS issues) ──
+
 async function fetchMilestonePhoto(milestone) {
   var msImg = document.getElementById('ms-img');
   var msPh  = document.getElementById('ms-img-placeholder');
@@ -1052,15 +1054,13 @@ async function fetchMilestonePhoto(milestone) {
   } catch(e) { console.warn('Milestone photo failed:', e.message); }
 }
 
-
-// Fetch location photo via Netlify serverless function (handles Unsplash server-side)
 async function fetchLocationPhoto(lat, lng, km) {
   var li = document.getElementById('loc-img');
   var lc = document.querySelector('.loc-cap-name');
   var ph = document.getElementById('loc-img-placeholder');
 
-  var place = nearestWpName(km);
-  if (lc) lc.textContent = place;
+  // Show nearest waypoint name immediately
+  if (lc) lc.textContent = nearestWpName(km);
 
   var cKey = 'lp_' + (Math.round(km / 10) * 10);
   try {
@@ -1079,215 +1079,15 @@ async function fetchLocationPhoto(lat, lng, km) {
     var res = await fetch('/.netlify/functions/location-photo?lat='+lat.toFixed(4)+'&lng='+lng.toFixed(4)+'&km='+Math.round(km));
     if (!res.ok) throw new Error('HTTP '+res.status);
     var data = await res.json();
-    var photoUrl = data.photo && data.photo.url;
-    var placeName = data.placeName || place;
-    if (lc) lc.textContent = placeName;
-    if (photoUrl && li) {
-      li.src = photoUrl;
+    var url = data.photo && data.photo.url;
+    var place = data.placeName || nearestWpName(km);
+    if (lc) lc.textContent = place;
+    if (url && li) {
+      li.src = url;
       li.onload = function(){ li.style.opacity='1'; if(ph) ph.style.display='none'; };
     }
-    try { localStorage.setItem(cKey, JSON.stringify({url:photoUrl, place:placeName})); } catch(e2){}
-  } catch(e) {
-    console.warn('Photo fetch failed:', e.message);
-  }
-}
-
-// Fetch milestone photo directly from Unsplash
-async function fetchMilestonePhoto(milestone) {
-  var msImg = document.getElementById('ms-img');
-  var msPlaceholder = document.getElementById('ms-img-placeholder');
-  if(!msImg) return;
-
-  var cKey = 'ms_' + milestone.km;
-  try {
-    var cached = localStorage.getItem(cKey);
-    if(cached) {
-      var data = JSON.parse(cached);
-      if(data && data.url) {
-        msImg.src = data.url;
-        msImg.onload = function(){ msImg.style.opacity='1'; if(msPlaceholder) msPlaceholder.style.display='none'; };
-        return;
-      }
-    }
-  } catch(e) {}
-
-  // Search by milestone name
-  var query = encodeURIComponent(milestone.name.split('—')[0].trim() + ' travel landscape');
-  try {
-    var res = await fetch(
-      'https://api.unsplash.com/photos/random?query=' + query +
-      '&orientation=landscape&content_filter=high',
-      { headers: { 'Authorization': 'Client-ID ayeoZOU5dQiAM9QwfcNGyDdbiQ21Fz0bJjBZuOAOGac' } }
-    );
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    var data = await res.json();
-    if(data.urls && data.urls.regular) {
-      try { localStorage.setItem(cKey, JSON.stringify({url: data.urls.regular})); } catch(e) {}
-      msImg.src = data.urls.regular;
-      msImg.onload = function(){ msImg.style.opacity='1'; if(msPlaceholder) msPlaceholder.style.display='none'; };
-    }
-  } catch(e) { console.warn('Milestone photo failed:', e.message); }
-}
-
-// Fetch location photo directly from Unsplash
-const UNSPLASH_KEY = 'ayeoZOU5dQiAM9QwfcNGyDdbiQ21Fz0bJjBZuOAOGac';
-
-async function fetchLocationPhoto(lat, lng, km) {
-  var li = document.getElementById('loc-img');
-  var lc = document.querySelector('.loc-cap-name');
-  var ph = document.getElementById('loc-img-placeholder');
-
-  // Show nearest waypoint name immediately
-  var place = nearestWpName(km);
-  if (lc) lc.textContent = place;
-
-  // Check cache
-  var cKey = 'lp_' + (Math.round(km / 10) * 10);
-  try {
-    var cached = localStorage.getItem(cKey);
-    if (cached) {
-      var d = JSON.parse(cached);
-      if (d && d.url) {
-        if(lc && d.place) lc.textContent = d.place;
-        if(li) {
-          li.style.opacity = '0';
-          li.src = d.url;
-          li.onload = function(){ li.style.opacity='1'; if(ph) ph.style.display='none'; };
-          li.onerror = function(){ /* cache miss - clear it */ try{localStorage.removeItem(cKey);}catch(e){} };
-        }
-        return;
-      }
-    }
-  } catch(e) {}
-  // Clear potentially stale cache
-  try { localStorage.removeItem(cKey); } catch(e) {}
-
-  // Fetch from Unsplash directly
-  try {
-    var query = place + ' travel scenic';
-    var uRes = await fetch(
-      'https://api.unsplash.com/photos/random?query='+encodeURIComponent(query)+'&orientation=landscape&content_filter=high',
-      { headers: { 'Authorization': 'Client-ID '+UNSPLASH_KEY } }
-    );
-    if (uRes.ok) {
-      var uData = await uRes.json();
-      if (uData.urls && uData.urls.regular) {
-        var photoUrl = uData.urls.regular;
-        if(li){ li.src=photoUrl; li.onload=function(){ li.style.opacity='1'; if(ph) ph.style.display='none'; }; }
-        if(lc && uData.location && uData.location.title) lc.textContent = uData.location.title;
-        try { localStorage.setItem(cKey, JSON.stringify({url:photoUrl, place:place})); } catch(e2){}
-      }
-    } else {
-      console.warn('Unsplash error:', uRes.status, uRes.statusText);
-    }
-  } catch(e) { 
-    console.warn('Photo fetch failed:', e.message);
-    // Try Netlify function as fallback
-    try {
-      var nRes = await fetch('/.netlify/functions/location-photo?lat='+lat.toFixed(4)+'&lng='+lng.toFixed(4)+'&km='+Math.round(km));
-      if (nRes.ok) {
-        var nData = await nRes.json();
-        if (nData.photo && nData.photo.url) {
-          if(lc && nData.placeName) lc.textContent = nData.placeName;
-          if(li){ li.src=nData.photo.url; li.onload=function(){ li.style.opacity='1'; if(ph) ph.style.display='none'; }; }
-          try { localStorage.setItem(cKey, JSON.stringify({url:nData.photo.url, place:nData.placeName||place})); } catch(e3){}
-        }
-      }
-    } catch(e2) { console.warn('Netlify fallback also failed:', e2.message); }
-  }
-}
-
-// Fetch milestone photo directly from Unsplash
-async function fetchMilestonePhoto(milestone) {
-  var msImg = document.getElementById('ms-img');
-  var msPlaceholder = document.getElementById('ms-img-placeholder');
-  if(!msImg) return;
-
-  var cKey = 'ms_' + milestone.km;
-  try {
-    var cached = localStorage.getItem(cKey);
-    if(cached) {
-      var data = JSON.parse(cached);
-      if(data && data.url) {
-        msImg.src = data.url;
-        msImg.onload = function(){ msImg.style.opacity='1'; if(msPlaceholder) msPlaceholder.style.display='none'; };
-        return;
-      }
-    }
-  } catch(e) {}
-
-  // Search by milestone name
-  var query = encodeURIComponent(milestone.name.split('—')[0].trim() + ' travel landscape');
-  try {
-    var res = await fetch(
-      'https://api.unsplash.com/photos/random?query=' + query +
-      '&orientation=landscape&content_filter=high',
-      { headers: { 'Authorization': 'Client-ID ayeoZOU5dQiAM9QwfcNGyDdbiQ21Fz0bJjBZuOAOGac' } }
-    );
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    var data = await res.json();
-    if(data.urls && data.urls.regular) {
-      try { localStorage.setItem(cKey, JSON.stringify({url: data.urls.regular})); } catch(e) {}
-      msImg.src = data.urls.regular;
-      msImg.onload = function(){ msImg.style.opacity='1'; if(msPlaceholder) msPlaceholder.style.display='none'; };
-    }
-  } catch(e) { console.warn('Milestone photo failed:', e.message); }
-}
-
-// Fetch dynamic location photo from our serverless function
-async function fetchLocationPhoto(lat, lng, km) {
-  var cacheKey = 'lp_' + Math.round(km / 5) * 5;
-
-  // Always show nearest waypoint name immediately while photo loads
-  var lc = document.querySelector('.loc-cap-name');
-  if (lc) lc.textContent = nearestWpName(km);
-
-  // Check localStorage cache
-  try {
-    var cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      var data = JSON.parse(cached);
-      if (data && (data.photo || data.placeName)) {
-        applyLocationPhoto(data);
-        return;
-      }
-    }
-  } catch(e) {}
-
-  try {
-    var res = await fetch(
-      '/.netlify/functions/location-photo?lat=' + lat.toFixed(5) +
-      '&lng=' + lng.toFixed(5) + '&km=' + Math.round(km)
-    );
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    var data = await res.json();
-    try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch(e) {}
-    applyLocationPhoto(data);
-  } catch(err) {
-    console.warn('Location photo fetch failed:', err.message);
-    // Keep the waypoint name — don't show "On the road"
-    // Try a direct Unsplash fetch as fallback (no proxy needed for demo)
-    try {
-      var placeName = nearestWpName(km);
-      var uRes = await fetch(
-        'https://api.unsplash.com/photos/random?query=' +
-        encodeURIComponent(placeName + ' landscape travel') +
-        '&orientation=landscape&content_filter=high',
-        { headers: { 'Authorization': 'Client-ID ayeoZOU5dQiAM9QwfcNGyDdbiQ21Fz0bJjBZuOAOGac' } }
-      );
-      if (uRes.ok) {
-        var uData = await uRes.json();
-        var li2 = document.getElementById('loc-img');
-        var ph2 = document.getElementById('loc-img-placeholder');
-        if (li2 && uData.urls) {
-          li2.src = uData.urls.regular;
-          li2.onload = function(){ li2.style.opacity='1'; if(ph2) ph2.style.display='none'; };
-        }
-        var cr = document.getElementById('photo-credit');
-        if (cr && uData.user) cr.innerHTML = 'Photo: <a href="'+uData.user.links.html+'" target="_blank" style="color:rgba(255,255,255,0.7)">'+uData.user.name+'</a> / Unsplash';
-      }
-    } catch(e2) { console.warn('Direct Unsplash also failed:', e2.message); }
-  }
+    try { localStorage.setItem(cKey, JSON.stringify({url:url, place:place})); } catch(e2){}
+  } catch(e) { console.warn('Location photo failed:', e.message); }
 }
 
 function applyLocationPhoto(data) {
