@@ -173,7 +173,7 @@
   <div class="i-title">The Long Road South</div>
   <div class="i-line"></div>
   <div class="i-sub">Liverpool → Val de Vie, Paarl · 11,850 km</div>
-  <div class="i-km">612 km ridden · Virtually near Paris</div>
+  <div class="i-km" id="i-km">Loading...</div>
   <div class="i-status" id="intro-status">Plotting the route...</div>
 </div>
 
@@ -825,8 +825,15 @@ async function init(){
     if (fullRouteLine) map.removeLayer(fullRouteLine);
     if (doneRouteLine) map.removeLayer(doneRouteLine);
 
-    // Split by actual km distance along the real road geometry
-    var split = splitRouteByKm(allCoords, RIDDEN, TOTAL_KM);
+    // Find correct split point using WP_KM table
+    // Find which waypoint index we're at
+    var wpIdx = 0;
+    for (var wi = 0; wi < WP_KM.length - 1; wi++) {
+      if (WP_KM[wi] <= RIDDEN) wpIdx = wi; else break;
+    }
+    // Use fraction of waypoint index to split OSRM coords
+    var wFrac = wpIdx / (WAYPOINTS.length - 1);
+    var split = splitAtFraction(allCoords, wFrac);
     var rdone = split.done;
 
     fullRouteLine = L.polyline(allCoords, {color:'#2B7FD4', weight:2.5, opacity:0.45}).addTo(map);
